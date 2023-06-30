@@ -24,14 +24,14 @@ class Misc(commands.Cog):
     async def death(self, ctx: commands.Context):
         streamer = await ctx.channel.user()
         await ctx.send(
-            f"{streamer.display_name} had died a total of {self.deaths[str(streamer.id)]['total']}"
+            f"{streamer.display_name} had died a total of {self.deaths[str(streamer.id)]['total']}."
         )
 
     @commands.command()
     async def bdeath(self, ctx: commands.Context):
         streamer = await ctx.channel.user()
         await ctx.send(
-            f"{streamer.display_name} had died a total of {self.deaths[str(streamer.id)]['boss']}"
+            f"{streamer.display_name} had died a total of {self.deaths[str(streamer.id)]['boss']} to the boss."
         )
 
     @commands.command(name="death++")
