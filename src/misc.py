@@ -67,6 +67,7 @@ class Misc(commands.Cog):
     async def setdeath(self, ctx: commands.Context, type: str, num: int = 0):
         if not ctx.author.is_mod:
             return
+        type = type.lower()
         streamer = await ctx.channel.user()
         if self.deaths.get(str(streamer.id)) is None:
             self.deaths[str(streamer.id)] = {}
