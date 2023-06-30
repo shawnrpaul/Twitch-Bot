@@ -118,7 +118,7 @@ class Fight(commands.Cog):
 
     @commands.command()
     async def leaderboard(self, ctx: commands.Context):
-        streamer = await ctx.author.user()
+        streamer = await ctx.channel.user()
         if not (scores := self.battle_royale_scores.get(str(streamer.id))):
             scores = self.create_channel_br(streamer)
             self.battle_royale_scores[str(streamer.id)] = scores
@@ -127,7 +127,7 @@ class Fight(commands.Cog):
         for score in scores:
             user = await self.client.fetch_users(ids=[int(score[0])])
             text.append(f"{user[0].display_name}: {score[1]}")
-        message = ",\n".join(text)
+        message = ", ".join(text)
         await ctx.send(message)
 
 
