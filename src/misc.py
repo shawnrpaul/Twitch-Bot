@@ -85,7 +85,7 @@ class Misc(commands.Cog):
     @commands.command()
     async def cmds(self, ctx: commands.Context):
         await ctx.send(
-            "*death, *death++, *bdeath, *bdeath++, *setdeath <type> <num>, *fight <user>, *scores (user), *duelwinner <winner> <loser>, *brwinner <winner>"
+            "*fight <user>, *scores (user), *duelwinner <winner> <loser>, *brwinner <winner>, *leaderboard, *death, *death++, *bdeath, *bdeath++, *setdeath <type> <num>"
         )
 
 

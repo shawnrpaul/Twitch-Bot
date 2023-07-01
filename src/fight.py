@@ -88,7 +88,7 @@ class Fight(commands.Cog):
             channel_scores[str(user.id)] = 0
             user_br_scores = 0
         await ctx.send(
-            f"{user.display_name} won {scores['wins']} matches, won {user_br_scores} battle royale matches, and lost {scores['loses']} matches"
+            f"{user.display_name} won {scores['wins']} matches, lost {scores['loses']} matches, and won {user_br_scores} battle royale matches"
         )
 
     @commands.command()
@@ -98,8 +98,16 @@ class Fight(commands.Cog):
         if not ctx.author.is_mod:
             return
         self.update_scores(winner, loser)
-        await ctx.send(
-            f"Congratulations to {winner.display_name} for winning the duel!"
+        streamer = await ctx.channel.user()
+        await asyncio.gather(
+            streamer.timeout_user(
+                self.client._token,
+                self.client.user_id,
+                int(loser.id),
+                60,
+                "Lost a duel",
+            ),
+            ctx.send(f"Congratulations to {winner.display_name} for winning the duel!"),
         )
 
     @commands.command()
