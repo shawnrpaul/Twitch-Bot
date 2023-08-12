@@ -2,6 +2,7 @@ from twitchio.ext import commands
 from typing import Any, Iterable
 import importlib
 import logging
+import os
 import sys
 import json
 
@@ -35,8 +36,10 @@ class Client(commands.Bot):
         for cog in cogs:
             try:
                 mod = importlib.import_module(f"src.{cog}")
-            except ModuleNotFoundError:
-                logging.error(f"Error while trying loading {cog}")
+            except ModuleNotFoundError as e:
+                logging.error(
+                    f"Error while trying loading {cog} - {e.__class__.name}: {e}"
+                )
                 continue
             mod.setup(self)
 
@@ -108,3 +111,26 @@ class Client(commands.Bot):
     async def close(self):
         self.run_event("on_close")
         return await super().close()
+
+
+logging.basicConfig(
+    filename="client.log",
+    level=logging.ERROR,
+    format="%(levelname)s:%(asctime)s:%(message)s",
+)
+
+
+def main():
+    settings = Client.load_settings()
+    client = Client(
+        token=settings["token"],
+        prefix=settings["prefix"],
+        initial_channels=settings["initial_channels"],
+    )
+    client.add_cogs(settings["cogs"])
+    client.run()
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, os.getcwd())
+    main()

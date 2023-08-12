@@ -1,9 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from twitchio.ext import commands
-from .client import Client
 import twitchio
 import asyncio
 import random
 import json
+
+if TYPE_CHECKING:
+    from ..client import Client
 
 
 class Fight(commands.Cog):

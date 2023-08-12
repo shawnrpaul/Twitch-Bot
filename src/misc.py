@@ -1,6 +1,10 @@
+from __future__ import annotations
 from twitchio.ext import commands
-from .client import Client
+from typing import TYPE_CHECKING
 import json
+
+if TYPE_CHECKING:
+    from ..client import Client
 
 
 class Misc(commands.Cog):
