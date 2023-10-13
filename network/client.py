@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
+from pathlib import Path
 import traceback
 import sys
 import re
@@ -84,10 +85,9 @@ class Client(QObject):
         if ctx.command.has_error_handler():
             return
 
-        print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
-        traceback.print_exception(
-            type(error), error, error.__traceback__, file=sys.stderr
-        )
+        path = open("twitch-bot.log", "a", encoding="utf-8")
+        print(f"Ignoring exception in command {ctx.command}:", file=path)
+        traceback.print_exception(type(error), error, error.__traceback__, file=path)
 
     def add_cog(self, cog: Cog) -> Cog:
         name = cog.__class__.__name__
