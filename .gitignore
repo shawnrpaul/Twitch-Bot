@@ -1,9 +1,9 @@
-__pycache__
-.venv/
-.vscode/
-data
 *.log
-build
-dist
-*.spec
+main.spec
+data/
+build/
+dist/
+__pycache__/
 .cipher/
+.vscode/
+.venv/

@@ -1,0 +1,46 @@
+MainWindow{
+    background-color: #1E1E1E;
+}
+
+Body {
+    background-color: #1E1E1E;
+}
+
+
+Sidebar {
+    background-color: #2C2C2C;
+    border: none;
+}
+
+CogsPage {
+    background-color: #1E1E1E;
+    border: none;
+}
+
+CogsPage > QFrame {
+    background-color: #1E1E1E;
+    border: none;
+}
+
+CogLabel {
+    color: #FFFFFF;
+    background-color: #2C2C2C;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2C2C2C;
+    border-radius: 10px;
+    margin: 6px 10px 6px 10px;
+    font-size: 30px;
+    font-weight: bold;
+}
+SidebarLabel {
+    color: #FFFFFF;
+    background-color: #2C2C2C;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2C2C2C;
+    border-radius: 10px;
+    margin: 10px 10px 6px 10px;
+    font-size: 30px;
+    font-weight: bold;
+}
