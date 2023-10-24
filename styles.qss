@@ -34,8 +34,8 @@ CogLabel {
     font-weight: bold;
 }
 SidebarLabel {
-    color: #FFFFFF;
     background-color: #2C2C2C;
+    color: #FFFFFF;
     border-width: 1px;
     border-style: solid;
     border-color: #2C2C2C;
@@ -43,4 +43,14 @@ SidebarLabel {
     margin: 10px 10px 6px 10px;
     font-size: 30px;
     font-weight: bold;
+}
+
+QMenu {
+    background-color: #3C3C3C;
+    color: #FFFFFF;
+}
+
+QMenu::item::selected {
+    background-color: #454646; 
+    color: #FFFFFF;
 }

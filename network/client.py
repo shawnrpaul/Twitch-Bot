@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
-from pathlib import Path
+import logging
 import traceback
 import sys
 import re
@@ -27,7 +27,7 @@ class Client(QObject):
         super().__init__(window)
         self._window = window
         self._client_id = "gp762nuuoqcoxypju8c569th9wz7q5"
-        self._token = "2wq5gfgrxlhc618j0jfwaw4do636jq"
+        self._token = "Insert Token"
         self._user_id = None
         self._http = HTTP(self)
         self._ws = WebSocket(self)
@@ -70,7 +70,7 @@ class Client(QObject):
         if not self.streamer:
             return
         self._ws.sendTextMessage(f"PRIVMSG #{self._ws.nick} :{message}\r\n")
-        message = Message(0, self.streamer, message)
+        message = Message(0, self, self.streamer, message)
         self.dispatch("on_message", message)
         return message
 
@@ -80,16 +80,26 @@ class Client(QObject):
         self._ws.sendTextMessage(
             f"@reply-parent-msg-id={message_id} PRIVMSG #{self._ws.nick} :{message}\r\n"
         )
-        message = Message(0, self.streamer, message)
+        message = Message(0, self, self.streamer, message)
         self.dispatch("on_message", message)
 
     def command_error(self, ctx: Context, error: Exception):
         if ctx.command.has_error_handler():
             return
 
-        path = open("twitch-bot.log", "a", encoding="utf-8")
-        print(f"Ignoring exception in command {ctx.command}:", file=path)
-        traceback.print_exception(type(error), error, error.__traceback__, file=path)
+        print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
+        traceback.print_exception(
+            type(error), error, error.__traceback__, file=sys.stderr
+        )
+
+    def event_error(self, event: Event, error: Exception):
+        if event.has_error_handler():
+            return
+
+        print(f"Ignoring exception in event {event.name}:", file=sys.stderr)
+        traceback.print_exception(
+            type(error), error, error.__traceback__, file=sys.stderr
+        )
 
     def add_cog(self, cog: Cog) -> Cog:
         name = cog.__class__.__name__

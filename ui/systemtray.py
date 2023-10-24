@@ -15,7 +15,7 @@ class SystemTray(QSystemTrayIcon):
         self.createMenu()
 
     def createMenu(self):
-        self.menu = QMenu()
+        self.menu = QMenu(self._window)
         show_hide = self.menu.addAction("Show")
         show_hide.triggered.connect(
             lambda: self._window.show() if self._window.isHidden() else ...

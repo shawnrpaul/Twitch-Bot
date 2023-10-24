@@ -5,9 +5,8 @@ import json
 from PyQt6.QtCore import QUrl, QEventLoop
 from PyQt6.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
 
-from models import User
-
 if TYPE_CHECKING:
+    from models import Message, User
     from .client import Client
 
 
@@ -78,10 +77,10 @@ class HTTP(QNetworkAccessManager):
             raise Exception("Invalid or unauthorized Access Token passed.")
         return json.loads(resp.readAll().data().decode()).get("data")
 
-    def fetch_mods(self, streamer: int):
+    def fetch_mods(self):
         req = QNetworkRequest(
             QUrl(
-                f"https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={streamer}"
+                f"https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={self.client.streamer.id}"
             )
         )
         req.setHeader(
@@ -134,14 +133,12 @@ class HTTP(QNetworkAccessManager):
             json.loads(resp.readAll().data().decode()).get("data")[0].get("color", "")
         )
 
-    def ban_user(
-        self, streamer: int, user: int, moderator: User, reason: str, duration: int = 0
-    ):
+    def ban_user(self, user: int, moderator: User, reason: str, duration: int = 0):
         if not moderator:
             moderator = self.client.streamer
         req = QNetworkRequest(
             QUrl(
-                f"https://api.twitch.tv/helix/moderation/bans?broadcaster_id={streamer}&moderator_id={moderator.id}"
+                f"https://api.twitch.tv/helix/moderation/bans?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}"
             )
         )
         req.setHeader(
@@ -167,12 +164,14 @@ class HTTP(QNetworkAccessManager):
         if status_code == 423:
             raise Exception(f"You have made too many requests in the given channel")
 
-    def create_prediction(
-        self, broadcaster_id: int, title: str, options: list[str], length: int = 120
-    ) -> None:
-        if len(options) < 2:
-            raise TypeError("Options is empty")
-        req = QNetworkRequest(QUrl(f"https://api.twitch.tv/helix/predictions"))
+    def delete_message(self, message: Message, moderator: User = None):
+        if not moderator:
+            moderator = self.client.streamer
+        req = QNetworkRequest(
+            QUrl(
+                f"https://api.twitch.tv/helix/moderation/chat?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}&message_id={message.id}"
+            )
+        )
         req.setHeader(
             QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
         )
@@ -180,23 +179,16 @@ class HTTP(QNetworkAccessManager):
             "Authorization".encode(), f"Bearer {self.client._token}".encode()
         )
         req.setRawHeader("Client-Id".encode(), self.client._client_id.encode())
-        data = {
-            "broadcaster_id": broadcaster_id,
-            "title": title,
-            "options": [],
-            "prediction_window": length,
-        }
-        for option in options:
-            data["options"].append({"title": option})
-        resp = self.post(req, json.dumps(data).encode())
+        resp = self.deleteResource(req)
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception("Bad Request")
+            raise Exception(f"Unable to delete message.")
         if status_code == 401:
-            raise Exception("You are not authorized to create a prediction.")
-        if status_code == 429:
-            raise Exception("You have been rate-limited.")
-        print(resp.readAll().data())
+            raise Exception("You are not authorized to delete the message.")
+        if status_code == 403:
+            raise Exception(f"The given moderator isn't a moderator.")
+        if status_code == 404:
+            raise Exception(f"Message not found or was created more than 6 hrs ago")
 
     def subscribe_event(self, token: str, data: dict[str, Any]):
         req = QNetworkRequest(
@@ -234,4 +226,9 @@ class HTTP(QNetworkAccessManager):
         loop = QEventLoop(self)
         resp.finished.connect(lambda: loop.quit())
         loop.exec()
-        return resp
+        status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+        if 200 > status_code < 300:
+            raise Exception(f"Unable to validate Access Token: {resp.errorString()}")
+        if status_code == 401:
+            raise Exception("Invalid or unauthorized Access Token passed.")
+        return json.loads(resp.readAll().data().decode())

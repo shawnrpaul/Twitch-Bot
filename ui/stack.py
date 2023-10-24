@@ -79,7 +79,7 @@ class CogLabel(QLabel):
         self._mod = importlib.import_module(f"cogs.{self.path}")
         try:
             self.cog = self._mod.setup(self.client)
-            self.load_unload.setText("Load")
+            self.load_unload.setText("Unload")
         except Exception as e:
             self.load_unload.setText("Load")
             logging.error(str(e))

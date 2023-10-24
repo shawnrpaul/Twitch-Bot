@@ -126,6 +126,7 @@ def parse_command(raw_command_component):
         "CLEARCHAT",
         "HOSTTARGET",
         "PRIVMSG",
+        "CLEARMSG",
     ]:
         parsed_command = {"command": switch_command, "channel": command_parts[1]}
     elif switch_command == "PING":

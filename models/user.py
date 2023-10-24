@@ -6,6 +6,7 @@ import datetime
 from dateutil.parser import parser
 
 if TYPE_CHECKING:
+    from .message import Message
     from network import HTTP
 
 
@@ -41,7 +42,7 @@ class User:
         self.id = int(id)
         self.login = login
         self.display_name = display_name
-        self.color = http.fetch_user_color(self.id)
+        self.color = color if (color := http.fetch_user_color(self.id)) else "#FFFFFF"
         self.type = type
         self.broadcaster_type = broadcaster_type
         self.description = description
@@ -55,6 +56,16 @@ class User:
     @property
     def name(self):
         return self.login
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, User):
+            return False
+        return self.id == other.id
+
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, User):
+            return True
+        return self.id != other.id
 
     def __repr__(self) -> str:
         return (
@@ -117,6 +128,7 @@ class Streamer(Chatter):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(self, *args, **kwargs)
         self.chatters: dict[int, User] = {self.id: self}
+        self.messages: dict[str, Message] = {}
 
     def __repr__(self) -> str:
         return (
@@ -130,8 +142,14 @@ class Streamer(Chatter):
             chatter
             if (chatter := self.chatters.get(mod["user_id"]))
             else User.from_user_id(mod["user_id"], self._http)
-            for mod in self._http.fetch_mods(self.id)
+            for mod in self._http.fetch_mods()
         ]
+
+    def append_message(self, message: Message):
+        self.messages[message.id] = message
+
+    def pop_message(self, id: str):
+        return self.messages.pop(id, None)
 
     @classmethod
     def from_user_id(cls, user_id: str, http: HTTP) -> Streamer:
@@ -159,7 +177,7 @@ class Streamer(Chatter):
             raise TypeError("A User object is required")
         if isinstance(reason, str) and len(reason) > 500:
             raise Exception("Reason must a be a max of 500 characters")
-        self._http.ban_user(self.id, user.id, moderator, reason)
+        self._http.ban_user(user.id, moderator, reason)
 
     def timeout_user(
         self,
@@ -173,4 +191,4 @@ class Streamer(Chatter):
             raise TypeError("A User object is required")
         if isinstance(reason, str) and len(reason) > 500:
             raise Exception("Reason must a be a max of 500 characters")
-        self._http.ban_user(self.id, user.id, moderator, reason, duration)
+        self._http.ban_user(user.id, moderator, reason, duration)

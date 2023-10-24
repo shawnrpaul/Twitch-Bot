@@ -153,17 +153,7 @@ class WebSocket(BaseWebSocket):
         return self.client.window
 
     def connect(self) -> None:
-        response = self._http.validate()
-        status_code = response.attribute(
-            QNetworkRequest.Attribute.HttpStatusCodeAttribute
-        )
-        if 200 > status_code < 300:
-            raise Exception(
-                f"Unable to validate Access Token: {response.errorString()}"
-            )
-        if status_code == 401:
-            raise Exception("Invalid or unauthorized Access Token passed.")
-        data = json.loads(response.readAll().data().decode())
+        data = self._http.validate()
         self.nick = data.get("login")
         self.client._user_id = data.get("user_id")
         return super().connect()
@@ -208,9 +198,17 @@ class WebSocket(BaseWebSocket):
                 author = Chatter.from_dict(data["tags"], streamer, self._http)
                 streamer.chatters[user_id] = author
                 self.client.dispatch("on_chatter_join", author)
-            message = Message(data["tags"]["id"], author, data["parameters"])
+            message = Message(
+                data["tags"]["id"], self.client, author, data["parameters"]
+            )
+            self.client.streamer.append_message(message)
             self.client.dispatch("on_message", message)
             self.client.run_command(data, message) if command.get("botCommand") else ...
+        elif command["command"] == "CLEARMSG":
+            return self.client.dispatch(
+                "on_message_delete",
+                self.client.streamer.pop_message(data["tags"]["target-msg-id"]),
+            )
         elif command["command"] == "PING":
             return self.ping()
 

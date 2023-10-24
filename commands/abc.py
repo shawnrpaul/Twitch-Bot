@@ -1,13 +1,16 @@
 from __future__ import annotations
+from typing import Any, Callable, TYPE_CHECKING
 from abc import abstractmethod
-from typing import Any, Callable
 import inspect
+
+if TYPE_CHECKING:
+    from .cog import Cog
 
 
 class Base:
     def __init__(self, name: str, func: Callable[..., Any]) -> None:
         self.name = name if name else func.__name__
-        self._instance = None
+        self._instance: Cog = None
         self.func = func
         self._error = None
 

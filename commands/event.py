@@ -16,8 +16,7 @@ class Event(Base):
         try:
             self.func(self._instance, *args, **kwargs)
         except Exception as e:
-            if self._error:
-                self._send_error_message(e)
+            self._send_error_message(e)
 
     def _send_error_message(self, error: Exception) -> None:
         if self._error:
@@ -29,6 +28,7 @@ class Event(Base):
                     file=sys.stderr,
                 )
                 traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+        self._instance.client.event_error(self, error)
 
 
 def event(event: str = None):

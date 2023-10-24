@@ -28,7 +28,7 @@ class SubscribeEvent(BaseEvent):
         super().__init__(payload, http)
         self.event_name = "subscribe_event"
         self.tier = payload["tier"]
-        self.is_gift = payload["is_gift"]
+        self.is_gift = payload.get("is_gift", False)
 
 
 class GiftSubEvent(SubscribeEvent):
@@ -36,6 +36,7 @@ class GiftSubEvent(SubscribeEvent):
         super().__init__(payload, http)
         self.event_name = "gift_sub_event"
         self.total = payload["total"]
+        self.is_gift = True
 
 
 class ReSubscribeEvent(SubscribeEvent):
@@ -83,13 +84,25 @@ class BanEvent(BaseEvent):
 
 class RewardEvent(BaseEvent):
     class Reward:
-        def __init__(self, id: str, title: str, cost: int, prompt: str = None) -> None:
+        def __init__(
+            self,
+            id: str,
+            reward_id: str,
+            title: str,
+            prompt: str,
+            cost: int,
+            user_input: str,
+        ) -> None:
             self.id = id
+            self.reward_id = reward_id
             self.title = title
-            self.cost = int(cost)
             self.prompt = prompt
+            self.cost = int(cost)
+            self.user_input = user_input
 
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__(payload, http)
         self.event_name = "reward_event"
-        self.reward = self.Reward(**payload["reward"])
+        self.reward = self.Reward(
+            payload["id"], *(list(payload["reward"].values())), payload["user_input"]
+        )

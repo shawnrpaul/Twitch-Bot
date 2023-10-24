@@ -1,5 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from .command import Command
 from .event import Event
+
+
+if TYPE_CHECKING:
+    from network import Client
 
 
 class CogMeta(type):
@@ -37,6 +43,9 @@ class Cog(metaclass=CogMeta):
                 event._instance = self
 
         return self
+
+    def __init__(self, client: Client) -> None:
+        self.client = client
 
     def unload(self):
         ...
