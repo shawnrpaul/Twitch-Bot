@@ -55,22 +55,24 @@ class Client(QObject):
     def run_command(self, data: dict[str, Any], message: Message):
         if not (command := self.__commands__.get(data["command"]["botCommand"])):
             return
-        args = (
-            re.split(r"\s+", params)
-            if (params := data["command"].get("botCommandParams"))
-            else []
-        )
+        if not isinstance(args := data["command"].get("botCommandParams"), list):
+            args = (
+                re.split(r"\s+", params)
+                if (params := data["command"].get("botCommandParams"))
+                else []
+            )
         if "\U000e0000" in args:
             args.remove("\U000e0000")
         ctx = Context(self, message, command, args)
         command(ctx)
 
-    def send_message(self, message: str) -> None:
+    def send_message(self, message: str) -> Message:
         if not self.streamer:
             return
         self._ws.sendTextMessage(f"PRIVMSG #{self._ws.nick} :{message}\r\n")
         message = Message(0, self.streamer, message)
         self.dispatch("on_message", message)
+        return message
 
     def reply(self, message_id: int, message: str) -> None:
         if not self.streamer:

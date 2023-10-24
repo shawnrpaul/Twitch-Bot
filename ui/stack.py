@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import importlib
+import logging
+import copy
+import sys
 import os
 
 from PyQt6.QtCore import Qt
@@ -62,25 +65,34 @@ class CogLabel(QLabel):
     def window(self) -> MainWindow:
         return self._window
 
+    def _remove_modules(self):
+        for name in copy.copy(sys.modules).keys():
+            mod_name = f"cogs.{self.path}"
+            if name.startswith(mod_name) and name != mod_name:
+                sys.modules.pop(name)
+
     def _load_unload(self):
         if self.load_unload.text() == "Unload":
             self.load_unload.setText("Load")
-            return self.client.remove_cog(self.cog)
+            self.client.remove_cog(self.cog)
+            return self._remove_modules()
         self._mod = importlib.import_module(f"cogs.{self.path}")
         try:
             self.cog = self._mod.setup(self.client)
-            self.setText(self.cog.__class__.__name__)
+            self.load_unload.setText("Load")
         except Exception as e:
-            self.window.systemTray.showMessage(str(e))
+            self.load_unload.setText("Load")
+            logging.error(str(e))
 
     def _reload(self):
         try:
             self.client.remove_cog(self.cog)
+            self._remove_modules()
             self._mod = importlib.reload(self._mod)
             self.cog = self._mod.setup(self.client)
             self.setText(self.cog.__class__.__name__)
         except Exception as e:
-            return self.window.systemTray.showMessage(str(e))
+            return logging.error(str(e))
 
 
 class CogsPage(QScrollArea):
@@ -108,15 +120,18 @@ class CogsPage(QScrollArea):
 
     def addCogs(self):
         for path in os.listdir("cogs"):
-            if not os.path.isfile(f"cogs/{path}") or not path.endswith(".py"):
-                continue
+            if os.path.isfile(f"cogs/{path}"):
+                if not path.endswith(".py"):
+                    continue
+            else:
+                if "__init__.py" not in os.listdir(f"cogs/{path}"):
+                    continue
             path = path.replace(".py", "")
             try:
                 mod = importlib.import_module(f"cogs.{path}")
                 cog = mod.setup(self.window.client)
             except Exception as e:
-                print(f"{e.__class__.__name__}: {e}")
-                self.window.systemTray.showMessage(f"{e.__class__.__name__}: {e}")
+                logging.error(f"{e.__class__.__name__}: {e}")
                 continue
             self._layout.addWidget(CogLabel(self.window, path, mod, cog))
 
