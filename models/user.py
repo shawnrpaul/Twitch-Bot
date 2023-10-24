@@ -140,7 +140,7 @@ class Streamer(Chatter):
     def mods(self) -> list[Chatter | User]:
         return [
             chatter
-            if (chatter := self.chatters.get(mod["user_id"]))
+            if (chatter := self.get_chatter(mod["user_id"]))
             else User.from_user_id(mod["user_id"], self._http)
             for mod in self._http.fetch_mods()
         ]
@@ -162,15 +162,21 @@ class Streamer(Chatter):
         return cls(mod=True, subscriber=True, http=http, **data)
 
     @singledispatchmethod
-    def get_chatter(self, id: int) -> User:
+    def get_chatter(self, id: int) -> User | None:
         return self.chatters.get(id)
 
     @get_chatter.register
-    def _(self, name: str) -> Chatter:
+    def _(self, name: str) -> Chatter | None:
         for chatter in self.chatters.values():
             if name in (chatter.display_name, chatter.name):
                 return chatter
         return None
+
+    def add_chatter(self, chatter: Chatter):
+        self.chatters[chatter.id] = chatter
+
+    def remove_chatter(self, chatter: Chatter):
+        self.chatters.pop(chatter.id, None)
 
     def ban_user(self, user: User, moderator: User = None, reason: str = None):
         if not isinstance(user, User):

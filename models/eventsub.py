@@ -71,7 +71,7 @@ class BanEvent(BaseEvent):
         super().__init__(payload, http)
         self.event_name = "ban_event"
         id = int(payload["moderator_user_id"])
-        self.moderator = http.client.streamer.chatters.get(id)
+        self.moderator = http.client.streamer.get_chatter(id)
         if not self.moderator:
             self.moderator = User.from_user_id(id, http)
         self.reason = payload["reason"]
@@ -104,5 +104,7 @@ class RewardEvent(BaseEvent):
         super().__init__(payload, http)
         self.event_name = "reward_event"
         self.reward = self.Reward(
-            payload["id"], *(list(payload["reward"].values())), payload["user_input"]
+            **payload["reward"],
+            reward_id=payload["id"],
+            user_input=payload["user_input"],
         )

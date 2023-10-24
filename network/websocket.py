@@ -4,10 +4,9 @@ from abc import abstractmethod
 import json
 
 from PyQt6.QtCore import QUrl
-from PyQt6.QtNetwork import QNetworkRequest
 from PyQt6.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from models import Streamer, Chatter, Message
+from models import Streamer, Chatter, Message, BanEvent
 from _parser import parse_message, parse_event
 
 if TYPE_CHECKING:
@@ -128,7 +127,9 @@ class EventSub(BaseWebSocket):
                 self._http.subscribe_event(self.client._token, event)
         elif data["metadata"]["message_type"] == "notification":
             if event := parse_event(data["payload"], self._http):
-                self.client.dispatch(f"on_{event.event_name}", event)
+                if isinstance(event, BanEvent):
+                    self.client.streamer.remove_chatter(event.chatter.id)
+                return self.client.dispatch(f"on_{event.event_name}", event)
 
     def ws_disconnected(self):
         self.connect()
@@ -196,7 +197,7 @@ class WebSocket(BaseWebSocket):
             user_id = int(data["tags"]["user-id"])
             if not (author := streamer.get_chatter(user_id)):
                 author = Chatter.from_dict(data["tags"], streamer, self._http)
-                streamer.chatters[user_id] = author
+                streamer.add_chatter(author)
                 self.client.dispatch("on_chatter_join", author)
             message = Message(
                 data["tags"]["id"], self.client, author, data["parameters"]
