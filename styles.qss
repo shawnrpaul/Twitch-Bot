@@ -33,6 +33,7 @@ CogLabel {
     font-size: 30px;
     font-weight: bold;
 }
+
 SidebarLabel {
     background-color: #2C2C2C;
     color: #FFFFFF;

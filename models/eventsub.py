@@ -10,23 +10,49 @@ if TYPE_CHECKING:
 
 
 class BaseEvent:
-    def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        self.event_name = "base_event"
+    def __init__(self, event_name: str) -> None:
+        self.event_name = event_name
+
+
+class _Event(BaseEvent):
+    def __init__(self, event_name: str, payload: dict[str, str], http: HTTP) -> None:
+        super().__init__(event_name)
         self.chatter = http.client.streamer.get_chatter(int(payload["user_id"]))
         if not self.chatter:
             self.chatter = User.from_user_id(payload["user_id"], http)
 
 
-class FollowEvent(BaseEvent):
+class FollowEvent(_Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        super().__init__(payload, http)
-        self.event_name = "follow_event"
+        super().__init__("follow_event", payload, http)
 
 
-class SubscribeEvent(BaseEvent):
+class BanEvent(_Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        super().__init__(payload, http)
-        self.event_name = "subscribe_event"
+        super().__init__("ban_event", payload, http)
+        id = int(payload["moderator_user_id"])
+        self.moderator = http.client.streamer.get_chatter(id)
+        if not self.moderator:
+            self.moderator = User.from_user_id(id, http)
+        self.reason = payload["reason"]
+        self.timeout = (
+            (parse(payload["ends_at"]) - parse(payload["banned_at"])).seconds
+            if not payload["is_permanent"]
+            else 0
+        )
+
+
+class RaidEvent(_Event):
+    def __init__(self, payload: dict[str, str], http: HTTP) -> None:
+        payload["broadcaster_user_id"] = payload.pop("to_broadcaster_user_id")
+        payload["user_id"] = payload.pop("from_broadcaster_user_id")
+        super().__init__("raid_event", payload, http)
+        self.viewers = int(payload["viewers"])
+
+
+class SubscribeEvent(_Event):
+    def __init__(self, payload: dict[str, str], http: HTTP) -> None:
+        super().__init__("subscribe_event", payload, http)
         self.tier = payload["tier"]
         self.is_gift = payload.get("is_gift", False)
 
@@ -36,6 +62,9 @@ class GiftSubEvent(SubscribeEvent):
         super().__init__(payload, http)
         self.event_name = "gift_sub_event"
         self.total = payload["total"]
+        self.cummulative_total = (
+            payload["cumulative_total"] if not payload["is_anonymous"] else 0
+        )
         self.is_gift = True
 
 
@@ -51,38 +80,18 @@ class ReSubscribeEvent(SubscribeEvent):
 
 class CheersEvent(BaseEvent):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        super().__init__(payload, http)
-        self.event_name = "cheers_event"
+        super().__init__("cheers_event")
+        if not payload["is_anonymous"]:
+            self.chatter = http.client.streamer.get_chatter(int(payload["user_id"]))
+            if not self.chatter:
+                self.chatter = User.from_user_id(payload["user_id"], http)
+        else:
+            self.chatter = None
         self.message = payload["message"]
         self.bits = int(payload["bits"])
 
 
-class RaidEvent(BaseEvent):
-    def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        payload["broadcaster_user_id"] = payload.pop("to_broadcaster_user_id")
-        payload["user_id"] = payload.pop("from_broadcaster_user_id")
-        super().__init__(payload, http)
-        self.event_name = "raid_event"
-        self.viewers = int(payload["viewers"])
-
-
-class BanEvent(BaseEvent):
-    def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        super().__init__(payload, http)
-        self.event_name = "ban_event"
-        id = int(payload["moderator_user_id"])
-        self.moderator = http.client.streamer.get_chatter(id)
-        if not self.moderator:
-            self.moderator = User.from_user_id(id, http)
-        self.reason = payload["reason"]
-        self.timeout = (
-            (parse(payload["ends_at"]) - parse(payload["banned_at"])).seconds
-            if not payload["is_permanent"]
-            else 0
-        )
-
-
-class RewardEvent(BaseEvent):
+class RewardEvent(_Event):
     class Reward:
         def __init__(
             self,
@@ -101,8 +110,7 @@ class RewardEvent(BaseEvent):
             self.user_input = user_input
 
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        super().__init__(payload, http)
-        self.event_name = "reward_event"
+        super().__init__("reward_event", payload, http)
         self.reward = self.Reward(
             **payload["reward"],
             reward_id=payload["id"],

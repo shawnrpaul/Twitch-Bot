@@ -128,7 +128,7 @@ class EventSub(BaseWebSocket):
         elif data["metadata"]["message_type"] == "notification":
             if event := parse_event(data["payload"], self._http):
                 if isinstance(event, BanEvent):
-                    self.client.streamer.remove_chatter(event.chatter.id)
+                    self.client.streamer.remove_chatter(event.chatter)
                 return self.client.dispatch(f"on_{event.event_name}", event)
 
     def ws_disconnected(self):
