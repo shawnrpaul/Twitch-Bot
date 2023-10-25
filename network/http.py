@@ -190,6 +190,37 @@ class HTTP(QNetworkAccessManager):
         if status_code == 404:
             raise Exception(f"Message not found or was created more than 6 hrs ago")
 
+    def create_prediction(
+        self, title: str, options: list[str], length: int = 120
+    ) -> None:
+        if len(options) < 2:
+            raise TypeError("Options is empty")
+        req = QNetworkRequest(QUrl(f"https://api.twitch.tv/helix/predictions"))
+        req.setHeader(
+            QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
+        )
+        req.setRawHeader(
+            "Authorization".encode(), f"Bearer {self.client._token}".encode()
+        )
+        req.setRawHeader("Client-Id".encode(), self.client._client_id.encode())
+        data = {
+            "broadcaster_id": self.client.streamer.id,
+            "title": title,
+            "options": [],
+            "prediction_window": length,
+        }
+        for option in options:
+            data["options"].append({"title": option})
+        resp = self.post(req, json.dumps(data).encode())
+        status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
+        if status_code == 400:
+            raise Exception("Bad Request")
+        if status_code == 401:
+            raise Exception("You are not authorized to create a prediction.")
+        if status_code == 429:
+            raise Exception("You have been rate-limited.")
+        print(resp.readAll().data())
+
     def subscribe_event(self, token: str, data: dict[str, Any]):
         req = QNetworkRequest(
             QUrl("https://api.twitch.tv/helix/eventsub/subscriptions")
