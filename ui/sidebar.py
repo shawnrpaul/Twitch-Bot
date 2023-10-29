@@ -10,9 +10,9 @@ if TYPE_CHECKING:
 
 
 class SidebarLabel(QLabel):
-    def __init__(self, sidebar: Sidebar, widget: QWidget):
-        super().__init__(sidebar)
-        self._window = sidebar.window
+    def __init__(self, window: MainWindow, widget: QWidget):
+        super().__init__()
+        self._window = window
         self.widget = widget
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 

@@ -22,6 +22,17 @@ class _Event(BaseEvent):
             self.chatter = User.from_user_id(payload["user_id"], http)
 
 
+class StreamOnline(BaseEvent):
+    def __init__(self, payload: dict[str, str], _) -> None:
+        super().__init__("on_stream_online")
+        self.type = payload["type"]
+
+
+class StreamOffline(BaseEvent):
+    def __init__(self, _, __) -> None:
+        super().__init__("on_stream_offline")
+
+
 class FollowEvent(_Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__("follow_event", payload, http)

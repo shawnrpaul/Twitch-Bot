@@ -3,7 +3,6 @@ from typing import Any, Callable, TYPE_CHECKING
 from types import FunctionType
 import traceback
 import inspect
-import sys
 
 from .abc import Base
 from models.user import User, Chatter
@@ -95,11 +94,10 @@ class Command(Base):
                 return self._error(self._instance, ctx, error)
             except Exception as e:
                 print(
-                    f"Ignoring exception in command {self._error.__name__}:",
-                    file=sys.stderr,
+                    f"Ignoring exception in command {self._error.__name__} - {e.__class__.__name__}"
                 )
-                traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
-        ctx.client.command_error(ctx, error)
+                traceback.print_exception(type(e), e, e.__traceback__)
+        ctx.client.on_command_error(ctx, error)
 
 
 def command(name: str = None):

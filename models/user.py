@@ -69,7 +69,7 @@ class User:
 
     def __repr__(self) -> str:
         return (
-            f"<User id={self.id} name={self.name} display_name={self.display_name} color={self.color}"
+            f"<User id={self.id} name={self.name} display_name={self.display_name} color={self.color} "
             f'description="{self.description}" created_at={self.created_at}>'
         )
 
@@ -107,7 +107,7 @@ class Chatter(User):
 
     def __repr__(self) -> str:
         return (
-            f'<Chatter id={self.id} name={self.name} display_name={self.display_name} description="{self.description}"'
+            f'<Chatter id={self.id} name={self.name} display_name={self.display_name} description="{self.description}" '
             f"mod={self.mod} subscriber={self.subscriber} created_at={self.created_at}>"
         )
 
@@ -132,7 +132,7 @@ class Streamer(Chatter):
 
     def __repr__(self) -> str:
         return (
-            f'<Streamer id={self.id} name={self.name} display_name={self.display_name} description="{self.description}"'
+            f'<Streamer id={self.id} name={self.name} display_name={self.display_name} description="{self.description}" '
             f"mod={self.mod} subscriber={self.subscriber} created_at={self.created_at}>"
         )
 

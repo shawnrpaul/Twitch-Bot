@@ -10,17 +10,17 @@ from .http import HTTP
 from .websocket import WebSocket, EventSub
 from commands import Context
 from models import User, Message
+import commands
 
 if TYPE_CHECKING:
     from ui import MainWindow
     from models import Streamer
-    from commands import Command, Cog, Event
 
 
 class Client(QObject):
-    __cogs__: dict[str, Cog]
-    __commands__: dict[str, Command]
-    __events__: dict[str, list[Event]]
+    __cogs__: dict[str, commands.Cog]
+    __commands__: dict[str, commands.Command]
+    __events__: dict[str, list[commands.Event]]
 
     def __init__(self, window: MainWindow) -> None:
         super().__init__(window)
@@ -82,25 +82,18 @@ class Client(QObject):
         message = Message(0, self, self.streamer, message)
         self.dispatch("on_message", message)
 
-    def command_error(self, ctx: Context, error: Exception):
-        if ctx.command.has_error_handler():
-            return
+    def on_stream_offline(self, _):
+        self.streamer.chatters.clear()
 
-        print(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
-        traceback.print_exception(
-            type(error), error, error.__traceback__, file=sys.stderr
-        )
+    def on_event_error(self, event: commands.Event, error: Exception):
+        print(f"Ignoring exception in event {event.name}")
+        traceback.print_exception(type(error), error, error.__traceback__)
 
-    def event_error(self, event: Event, error: Exception):
-        if event.has_error_handler():
-            return
+    def on_command_error(self, ctx: Context, error: Exception):
+        print(f"Ignoring exception in command {ctx.command.name}")
+        traceback.print_exception(type(error), error, error.__traceback__)
 
-        print(f"Ignoring exception in event {event.name}:", file=sys.stderr)
-        traceback.print_exception(
-            type(error), error, error.__traceback__, file=sys.stderr
-        )
-
-    def add_cog(self, cog: Cog) -> Cog:
+    def add_cog(self, cog: commands.Cog) -> commands.Cog:
         name = cog.__class__.__name__
         if self.__cogs__.get(name):
             raise Exception(f"Cog {name} already exists")
@@ -119,7 +112,7 @@ class Client(QObject):
             lst.extend(events)
         return cog
 
-    def remove_cog(self, cog: Cog) -> None:
+    def remove_cog(self, cog: commands.Cog) -> None:
         if not self.__cogs__.pop(cog.__class__.__name__, None):
             raise Exception(f"Cog {cog.__class__.__name__} doesn't exist")
         for key in cog.__commands__:

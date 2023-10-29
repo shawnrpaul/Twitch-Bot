@@ -15,6 +15,7 @@ class Context:
         self.message = message
         self.command = command
         self.args = args
+        self.kwargs = {}
 
     @property
     def streamer(self) -> Streamer:

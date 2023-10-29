@@ -2,14 +2,35 @@ MainWindow{
     background-color: #1E1E1E;
 }
 
+QMenu {
+    background-color: #3C3C3C;
+    color: #FFFFFF;
+}
+
+QMenu::item::selected {
+    background-color: #454646; 
+    color: #FFFFFF;
+}
+
 Body {
     background-color: #1E1E1E;
 }
 
-
 Sidebar {
     background-color: #2C2C2C;
     border: none;
+}
+
+SidebarLabel {
+    background-color: #2C2C2C;
+    color: #FFFFFF;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #2C2C2C;
+    border-radius: 10px;
+    margin: 10px 10px 6px 10px;
+    font-size: 30px;
+    font-weight: bold;
 }
 
 CogsPage {
@@ -34,24 +55,8 @@ CogLabel {
     font-weight: bold;
 }
 
-SidebarLabel {
-    background-color: #2C2C2C;
-    color: #FFFFFF;
-    border-width: 1px;
-    border-style: solid;
-    border-color: #2C2C2C;
-    border-radius: 10px;
-    margin: 10px 10px 6px 10px;
-    font-size: 30px;
-    font-weight: bold;
-}
-
-QMenu {
-    background-color: #3C3C3C;
-    color: #FFFFFF;
-}
-
-QMenu::item::selected {
-    background-color: #454646; 
-    color: #FFFFFF;
+Logs {
+    background-color: #1E1E1E; 
+    color: #FFFFFF; 
+    border: none;
 }

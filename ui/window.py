@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QCloseEvent
 from PyQt6.QtWidgets import QMainWindow
 
@@ -8,6 +9,7 @@ from .body import Body
 from .sidebar import Sidebar
 from .stack import Stack
 from .systemtray import SystemTray
+from .logs import Logs
 from network import Client
 
 if TYPE_CHECKING:
@@ -26,6 +28,13 @@ class MainWindow(QMainWindow):
         self.systemTray = SystemTray(self)
         self.sidebar = Sidebar(self)
         self.stack = Stack(self)
+        self.logs = Logs(self)
+
+        action = self.addAction("Logs")
+        action.setShortcut("Alt+C")
+        action.triggered.connect(
+            lambda: self.logs.show() if self.logs.isHidden() else self.logs.hide()
+        )
 
         self.body.addWidget(self.sidebar, 3)
         self.body.addWidget(self.stack, 10)
@@ -36,6 +45,9 @@ class MainWindow(QMainWindow):
         self.stack.cogsPage.addCogs()
         self.client.start()
 
+    def log(self, text: str):
+        self.logs.log(text)
+
     def closeEvent(self, event: QCloseEvent):
         if self.systemTray.isVisible():
             self.hide()
@@ -45,5 +57,6 @@ class MainWindow(QMainWindow):
     def close(self):
         self.systemTray.hide()
         self.client.close()
+        self.logs.close()
         self.showMinimized() if self.isHidden() else ...
         return super().close()

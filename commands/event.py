@@ -3,7 +3,6 @@ from typing import Any, Callable
 from types import FunctionType
 import traceback
 import inspect
-import sys
 
 from .abc import Base
 
@@ -24,11 +23,10 @@ class Event(Base):
                 return self._error(self._instance, error)
             except Exception as e:
                 print(
-                    f"Ignoring exception in command {self._error.__name__}:",
-                    file=sys.stderr,
+                    f"Ignoring exception in command {self._error.__name__} - {e.__class__.__name__}: {e}"
                 )
-                traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
-        self._instance.client.event_error(self, error)
+                traceback.print_exception(type(e), e, e.__traceback__)
+        self._instance.client.on_event_error(self, error)
 
 
 def event(event: str = None):

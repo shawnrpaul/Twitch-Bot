@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 from models.eventsub import (
+    StreamOnline,
+    StreamOffline,
     FollowEvent,
     RewardEvent,
     SubscribeEvent,
@@ -18,6 +20,8 @@ if TYPE_CHECKING:
 
 
 TYPES: dict[str, BaseEvent] = {
+    "stream.online": StreamOnline,
+    "stream.offline": StreamOffline,
     "channel.follow": FollowEvent,
     "channel.subscribe": SubscribeEvent,
     "channel.subscription.gift": GiftSubEvent,

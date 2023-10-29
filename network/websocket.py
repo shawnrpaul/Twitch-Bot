@@ -6,7 +6,7 @@ import json
 from PyQt6.QtCore import QUrl
 from PyQt6.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from models import Streamer, Chatter, Message, BanEvent
+from models import Streamer, Chatter, Message, BanEvent, StreamOffline
 from _parser import parse_message, parse_event
 
 if TYPE_CHECKING:
@@ -57,6 +57,16 @@ class EventSub(BaseWebSocket):
         if data["metadata"]["message_type"] == "session_welcome":
             self._session_id = data["payload"]["session"]["id"]
             events = [
+                {
+                    "type": "stream.online",
+                    "version": "1",
+                    "condition": {"broadcaster_user_id": self.client._user_id},
+                },
+                {
+                    "type": "stream.offline",
+                    "version": "1",
+                    "condition": {"broadcaster_user_id": self.client._user_id},
+                },
                 {
                     "type": "channel.follow",
                     "version": "2",
@@ -115,7 +125,6 @@ class EventSub(BaseWebSocket):
                     },
                 },
             ]
-
             transport = {
                 "transport": {
                     "method": "websocket",
@@ -129,15 +138,19 @@ class EventSub(BaseWebSocket):
             if event := parse_event(data["payload"], self._http):
                 if isinstance(event, BanEvent):
                     self.client.streamer.remove_chatter(event.chatter)
+                elif isinstance(event, StreamOffline):
+                    self.client.on_stream_offline()
                 return self.client.dispatch(f"on_{event.event_name}", event)
 
+    def ws_connected(self):
+        self.client.dispatch("on_es_connect")
+
     def ws_disconnected(self):
+        self.client.dispatch("on_es_disconnect")
         self.connect()
 
     def ws_error(self, code):
-        self.client.window.systemTray.showMessage(
-            f"WS Error({code}): {self.errorString()}"
-        )
+        self.client.window.log(f"Eventsub WS Error({code}): {self.errorString()}")
 
 
 class WebSocket(BaseWebSocket):
@@ -162,6 +175,10 @@ class WebSocket(BaseWebSocket):
     def ping(self) -> None:
         return self.sendTextMessage("PONG :tmi.twitch.tv")
 
+    def close(self, *args, **kwargs) -> None:
+        self.client.send_message(f"Srpbotz has left the chat")
+        return super().close(*args, **kwargs)
+
     def ws_connected(self) -> None:
         for mode in ("commands", "tags"):
             self.sendTextMessage(f"CAP REQ :twitch.tv/{mode}")
@@ -169,6 +186,7 @@ class WebSocket(BaseWebSocket):
         self.sendTextMessage(f"NICK {self.nick}\r\n")
         self.sendTextMessage(f"JOIN #{self.nick}")
         self.window.systemTray.showMessage(f"Logged in as {self.nick}")
+        self.client.dispatch("on_ws_connect")
         if not self._ready:
             self._ready = True
             self.client._eventsub.connect()
@@ -184,12 +202,10 @@ class WebSocket(BaseWebSocket):
             self.client.streamer: Streamer = Streamer.from_name(
                 command["channel"].lstrip("#"), self._http
             )
-            self.sendTextMessage(
-                f"PRIVMSG #{self.nick} :Srpbotz has joined the chat\r\n"
-            )
+            self.client.send_message("Srpbotz has joined the chat")
             return self.client.dispatch("on_channel_join")
         elif command["command"] == "PART":
-            self.sendTextMessage(f"PRIVMSG #{self.nick} :Srpbotz has left the chat\r\n")
+            self.client.send_message(f"Srpbotz has left the chat")
             self.client.streamer = None
             return self.client.dispatch("on_channel_leave")
         elif command["command"] == "PRIVMSG":
@@ -216,10 +232,9 @@ class WebSocket(BaseWebSocket):
     def ws_disconnected(self):
         if self.window.systemTray.isVisible():
             self.window.systemTray.showMessage("Reconnecting...")
-            self.client.dispatch("on_channel_leave")
             self.client.streamer = None
             return self.connect()
-        self.window.systemTray.showMessage("Disconnecting...")
+        self.client.dispatch("on_ws_disconnect")
 
     def ws_error(self, code):
         self.window.systemTray.showMessage(f"WS Error({code}): {self.errorString()}")

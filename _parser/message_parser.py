@@ -143,7 +143,7 @@ def parse_command(raw_command_component):
     elif switch_command in ["GLOBALUSERSTATE", "USERSTATE", "ROOMSTATE"]:
         parsed_command = {"command": switch_command, "channel": command_parts[1]}
     elif switch_command == "RECONNECT":
-        logging.error(
+        logging.warn(
             "The Twitch IRC server is about to terminate the connection for maintenance."
         )
         parsed_command = {"command": switch_command}

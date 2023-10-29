@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import importlib
-import logging
+import traceback
 import copy
 import sys
 import os
@@ -82,7 +82,8 @@ class CogLabel(QLabel):
             self.load_unload.setText("Unload")
         except Exception as e:
             self.load_unload.setText("Load")
-            logging.error(str(e))
+            print(f"Unable to load cog: {self.cog.__class__.__name__}")
+            traceback.print_exception(type(e), e, e.__traceback__)
 
     def _reload(self):
         try:
@@ -92,7 +93,8 @@ class CogLabel(QLabel):
             self.cog = self._mod.setup(self.client)
             self.setText(self.cog.__class__.__name__)
         except Exception as e:
-            return logging.error(str(e))
+            print(f"Unable to reload cog: {self.cog.__class__.__name__}")
+            traceback.print_exception(type(e), e, e.__traceback__)
 
 
 class CogsPage(QScrollArea):
@@ -131,7 +133,8 @@ class CogsPage(QScrollArea):
                 mod = importlib.import_module(f"cogs.{path}")
                 cog = mod.setup(self.window.client)
             except Exception as e:
-                logging.error(f"{e.__class__.__name__}: {e}")
+                print(f"Unable to load cog: {path.capitalize()}")
+                traceback.print_exception(type(e), e, e.__traceback__)
                 continue
             self._layout.addWidget(CogLabel(self.window, path, mod, cog))
 
@@ -143,8 +146,9 @@ class Stack(QStackedWidget):
         self.cogsPage = CogsPage(self.window)
         self.addWidget(self.cogsPage)
 
-        self.cogsLabel = SidebarLabel(self, self.cogsPage)
+        self.cogsLabel = SidebarLabel(window, self.cogsPage)
         self.cogsLabel.setText("Cogs")
+
         self.window.sidebar.addWidget(self.cogsLabel)
 
     def removeWidget(self, w: QWidget | None) -> None:
