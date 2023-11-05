@@ -50,9 +50,9 @@ class Logs(QPlainTextEdit):
     def write(self, text: str):
         self.setPlainText(f"{self.toPlainText()}{text}")
 
-    def log(self, text: str):
+    def log(self, text: str, level=logging.ERROR):
         self.write(text)
-        logging.error(text)
+        logging.log(msg=text, level=level)
 
     def excepthook(
         self,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from abc import abstractmethod
+import logging
 import json
 
 from PyQt6.QtCore import QUrl
@@ -199,9 +200,7 @@ class WebSocket(BaseWebSocket):
         if not (command := data.get("command")):
             return
         if command["command"] == "JOIN":
-            self.client.streamer: Streamer = Streamer.from_name(
-                command["channel"].lstrip("#"), self._http
-            )
+            self.client.streamer: Streamer = Streamer.from_name(self.nick, self._http)
             self.client.send_message("Srpbotz has joined the chat")
             return self.client.dispatch("on_channel_join")
         elif command["command"] == "PART":
@@ -220,7 +219,9 @@ class WebSocket(BaseWebSocket):
             )
             self.client.streamer.append_message(message)
             self.client.dispatch("on_message", message)
-            self.client.run_command(data, message) if command.get("botCommand") else ...
+            self.client._run_command(data, message) if command.get(
+                "botCommand"
+            ) else ...
         elif command["command"] == "CLEARMSG":
             return self.client.dispatch(
                 "on_message_delete",
@@ -232,6 +233,9 @@ class WebSocket(BaseWebSocket):
     def ws_disconnected(self):
         if self.window.systemTray.isVisible():
             self.window.systemTray.showMessage("Reconnecting...")
+            self.window.log(
+                "Websocket Disconnet. Attempting to reconnect", logging.WARNING
+            )
             self.client.streamer = None
             return self.connect()
         self.client.dispatch("on_ws_disconnect")

@@ -18,10 +18,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from .sidebar import SidebarLabel
 
 if TYPE_CHECKING:
     from .window import MainWindow
+    from .sidebar import SidebarLabel
     from commands import Cog
 
 __all__ = ("Stack",)
@@ -101,6 +101,7 @@ class CogsPage(QScrollArea):
     def __init__(self, window: MainWindow) -> None:
         super().__init__(window)
         self._window = window
+        self.setObjectName("Cogs")
         self.page = QFrame(self)
         self.page.setFrameShape(QFrame.Shape.StyledPanel)
         self.page.setFrameShadow(QFrame.Shadow.Plain)
@@ -146,14 +147,18 @@ class Stack(QStackedWidget):
         self.cogsPage = CogsPage(self.window)
         self.addWidget(self.cogsPage)
 
-        self.cogsLabel = SidebarLabel(window, self.cogsPage)
-        self.cogsLabel.setText("Cogs")
+    @property
+    def window(self) -> MainWindow:
+        return self._window
 
-        self.window.sidebar.addWidget(self.cogsLabel)
+    def addWidget(self, w: QWidget) -> None:
+        self.window.sidebar.createLabel(w)
+        return super().addWidget(w)
 
-    def removeWidget(self, w: QWidget | None) -> None:
-        super().removeWidget(w)
-        w.deleteLater()
+    def removeWidget(self, w: QWidget) -> None:
+        if self.window.sidebar.removeLabel(w):
+            super().removeWidget(w)
+            w.deleteLater()
 
     @property
     def window(self) -> MainWindow:

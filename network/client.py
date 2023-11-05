@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import traceback
-import sys
 import re
 
 from PyQt6.QtCore import QObject
@@ -46,22 +45,19 @@ class Client(QObject):
     def is_ready(self) -> bool:
         return self._ws._ready
 
-    def invoke(self, name: str, ctx: Context, *args, **kwargs):
-        if not (command := self.__commands__.get(name)):
-            return
-        command(ctx, *args, **kwargs)
-
-    def run_command(self, data: dict[str, Any], message: Message):
-        if not (command := self.__commands__.get(data["command"]["botCommand"])):
-            return
-        if not isinstance(args := data["command"].get("botCommandParams"), list):
-            args = (
-                re.split(r"\s+", params)
-                if (params := data["command"].get("botCommandParams"))
-                else []
-            )
+    def _run_command(self, data: dict[str, Any], message: Message):
+        args = (
+            re.split(r"\s+", params)
+            if (params := data["command"].get("botCommandParams"))
+            else []
+        )
         if "\U000e0000" in args:
             args.remove("\U000e0000")
+        self.invoke(data["command"]["botCommand"], message, args)
+
+    def invoke(self, name: str, message: Message, args: list[str]):
+        if not (command := self.__commands__.get(name)):
+            return
         ctx = Context(self, message, command, args)
         command(ctx)
 
@@ -100,9 +96,7 @@ class Client(QObject):
         self.__cogs__[name] = cog
         for command in cog.__commands__.keys():
             if self.__commands__.get(command):
-                self.window.systemTray.showMessage(
-                    f"Cannot add command {command} as it already exists"
-                )
+                print(f"Cannot add command {command} as it already exists")
                 cog.__commands__.pop(command)
                 continue
         self.__commands__.update(cog.__commands__)
@@ -118,9 +112,9 @@ class Client(QObject):
         for key in cog.__commands__:
             self.__commands__.pop(key)
         for name, events in cog.__events__.items():
-            evnts = self.__events__.get(name)
+            cli_evnts = self.__events__.get(name)
             for event in events:
-                evnts.remove(event)
+                cli_evnts.remove(event)
         cog.unload()
 
     def dispatch(self, event: str, *args, **kwargs):

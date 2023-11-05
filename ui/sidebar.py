@@ -10,26 +10,36 @@ if TYPE_CHECKING:
 
 
 class SidebarLabel(QLabel):
-    def __init__(self, window: MainWindow, widget: QWidget):
+    def __init__(self, window: MainWindow, widget: QWidget | None = None):
         super().__init__()
         self._window = window
-        self.widget = widget
+        self.setWidget(widget)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     @property
     def window(self) -> MainWindow:
         return self._window
 
+    def setWidget(self, widget: QWidget | None = None):
+        self._widget = widget
+        self.setText(widget.objectName())
+
     def enterEvent(self, event: QEnterEvent | None) -> None:
+        if not self._widget:
+            return
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         event.accept()
 
     def leaveEvent(self, a0: QEvent | None) -> None:
+        if not self._widget:
+            return
         self.setCursor(Qt.CursorShape.ArrowCursor)
         a0.accept()
 
     def mousePressEvent(self, ev: QMouseEvent | None) -> None:
-        self.window.stack.setCurrentWidget(self.widget)
+        if not self._widget:
+            return
+        self.window.stack.setCurrentWidget(self._widget)
         return super().mousePressEvent(ev)
 
 
@@ -41,7 +51,7 @@ class Sidebar(QFrame):
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFrameShadow(QFrame.Shadow.Plain)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.setMinimumWidth(25)
+        self.setMinimumWidth(1)
 
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(5, 10, 5, 0)
@@ -49,12 +59,23 @@ class Sidebar(QFrame):
         self._layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self._layout)
 
-    def addWidget(self, widget: QWidget) -> None:
-        self._layout.addWidget(widget, alignment=Qt.AlignmentFlag.AlignTop)
+    def createLabel(self, widget: QWidget | None = None) -> SidebarLabel:
+        label = SidebarLabel(self.window, widget=widget)
+        self._layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignTop)
+        return label
 
-    def removeWidget(self, widget: QWidget) -> None:
-        self._layout.removeWidget(widget)
-        widget.deleteLater()
+    def removeLabel(self, widget: QWidget) -> bool:
+        for i in range(self._layout.count()):
+            label: SidebarLabel = self.layout.itemAt(i).widget()
+            if label._widget == widget:
+                self._layout.removeWidget(label)
+                label.deleteLater()
+                return True
+
+        message = f"Couldn't remove {widget.objectName()}"
+        self.window.showMessage(message)
+        self.window.log(message)
+        return False
 
     @property
     def window(self) -> MainWindow:

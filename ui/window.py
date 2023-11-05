@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import logging
 
-from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QCloseEvent
 from PyQt6.QtWidgets import QMainWindow
 
@@ -38,19 +38,22 @@ class MainWindow(QMainWindow):
 
         self.body.addWidget(self.sidebar, 3)
         self.body.addWidget(self.stack, 10)
-
         self.setCentralWidget(self.body)
         self.setStyleSheet(open("styles.qss").read())
 
         self.stack.cogsPage.addCogs()
         self.client.start()
 
-    def log(self, text: str):
-        self.logs.log(text)
+    def showMessage(self, message: str, time=3000):
+        self.systemTray.showMessage(message, time)
+
+    def log(self, text: str, level=logging.ERROR):
+        self.logs.log(text, level)
 
     def closeEvent(self, event: QCloseEvent):
         if self.systemTray.isVisible():
             self.hide()
+            self.logs.hide() if not self.logs.isHidden() else ...
             return event.ignore()
         return super().closeEvent(event)
 
