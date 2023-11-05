@@ -5,7 +5,7 @@ import traceback
 import inspect
 
 from .abc import Base
-from models.user import User, Chatter
+from models import User, Chatter
 
 if TYPE_CHECKING:
     from .context import Context

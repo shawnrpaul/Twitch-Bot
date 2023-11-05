@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 
-from .user import Chatter
+from .chatter import Chatter
 
 if TYPE_CHECKING:
     from network import Client
