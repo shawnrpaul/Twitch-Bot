@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import traceback
+import json
 import re
 
 from PyQt6.QtCore import QObject
@@ -24,8 +25,9 @@ class Client(QObject):
     def __init__(self, window: MainWindow) -> None:
         super().__init__(window)
         self._window = window
-        self._client_id = "gp762nuuoqcoxypju8c569th9wz7q5"
-        self._token = "Insert Token"
+        self._settings = self._load_settings()
+        self._client_id = self._settings["client-id"]
+        self._token = self._settings["token"]
         self._user_id = None
         self._http = HTTP(self)
         self._ws = WebSocket(self)
@@ -129,6 +131,10 @@ class Client(QObject):
         self, broadcaster_id: int, title: str, options: list[str], length: int = 120
     ):
         return self._http.create_prediction(broadcaster_id, title, options, length)
+
+    def _load_settings(self) -> dict:
+        with open("data/settings.json") as f:
+            return json.load(f)
 
     def close(self):
         self._ws.close()

@@ -80,7 +80,7 @@ class HTTP(QNetworkAccessManager):
     def fetch_mods(self):
         req = QNetworkRequest(
             QUrl(
-                f"{self.URL}/moderation/moderators?broadcaster_id={self.client.streamer.id}"
+                f"{self.URL}/moderation/moderators?broadcaster_id={self.client._user_id}"
             )
         )
         req.setHeader(
@@ -136,7 +136,7 @@ class HTTP(QNetworkAccessManager):
             moderator = self.client.streamer
         req = QNetworkRequest(
             QUrl(
-                f"{self.URL}/moderation/bans?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}"
+                f"{self.URL}/moderation/bans?broadcaster_id={self.client._user_id}&moderator_id={moderator.id}"
             )
         )
         req.setHeader(
@@ -167,7 +167,7 @@ class HTTP(QNetworkAccessManager):
             moderator = self.client.streamer
         req = QNetworkRequest(
             QUrl(
-                f"{self.URL}/moderation/chat?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}&message_id={message.id}"
+                f"{self.URL}/moderation/chat?broadcaster_id={self.client._user_id}&moderator_id={moderator.id}&message_id={message.id}"
             )
         )
         req.setHeader(
@@ -202,7 +202,7 @@ class HTTP(QNetworkAccessManager):
         )
         req.setRawHeader("Client-Id".encode(), self.client._client_id.encode())
         data = {
-            "broadcaster_id": self.client.streamer.id,
+            "broadcaster_id": self.client._user_id,
             "title": title,
             "options": [],
             "prediction_window": length,

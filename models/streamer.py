@@ -14,6 +14,7 @@ class Streamer(User):
         super().__init__(*args, **kwargs, streamer=self)
         self._messages: dict[str, Message] = {}
         self._chatters: dict[int, User] = {self.id: self}
+        self._mods = [int(mod["user_id"]) for mod in self._http.fetch_mods()]
 
     def __repr__(self) -> str:
         return (
@@ -25,8 +26,7 @@ class Streamer(User):
     def mods(self) -> list[User]:
         mods = []
         fetch_users = []
-        for mod in self._http.fetch_mods():
-            mod = int(mod["user_id"])
+        for mod in self._mods:
             if user := self._chatters.get(mod):
                 mods.append(user)
             else:

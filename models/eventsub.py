@@ -96,11 +96,12 @@ class CheersEvent(BaseEvent):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__("cheers_event")
         if not payload["is_anonymous"]:
-            self.chatter = http.client.streamer.get_chatter(int(payload["user_id"]))
+            streamer = http.client.streamer
+            self.chatter = streamer.get_chatter(int(payload["user_id"]))
             if not self.chatter:
-                self.chatter = User.from_user_id(
-                    payload["user_id"], http.client.streamer, http
-                )
+                self.chatter = User.from_user_id(payload["user_id"], streamer, http)
+                streamer.add_chatter(self.chatter)
+                http.client.dispatch("on_chatter_join", self.chatter)
         else:
             self.chatter = None
         self.message = payload["message"]

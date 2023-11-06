@@ -125,6 +125,20 @@ class EventSub(BaseWebSocket):
                         "broadcaster_user_id": self.client._user_id,
                     },
                 },
+                {
+                    "type": "channel.moderator.add",
+                    "version": "1",
+                    "condition": {
+                        "broadcaster_user_id": self.client._user_id,
+                    },
+                },
+                {
+                    "type": "channel.moderator.remove",
+                    "version": "1",
+                    "condition": {
+                        "broadcaster_user_id": self.client._user_id,
+                    },
+                },
             ]
             transport = {
                 "transport": {
@@ -136,7 +150,14 @@ class EventSub(BaseWebSocket):
                 event.update(transport)
                 self._http.subscribe_event(self.client._token, event)
         elif data["metadata"]["message_type"] == "notification":
-            if event := parse_event(data["payload"], self._http):
+            payload = data["payload"]
+            if payload["subscription"]["type"] == "channel.moderator.add":
+                self.client.streamer._mods.append(int(payload["event"]["user_id"]))
+                print(self.client.streamer.mods)
+            elif payload["subscription"]["type"] == "channel.moderator.remove":
+                self.client.streamer._mods.remove(int(payload["event"]["user_id"]))
+                print(self.client.streamer.mods)
+            elif event := parse_event(payload, self._http):
                 if isinstance(event, BanEvent):
                     self.client.streamer.remove_chatter(event.chatter)
                 elif isinstance(event, StreamOffline):
