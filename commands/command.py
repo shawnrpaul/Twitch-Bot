@@ -5,7 +5,7 @@ import traceback
 import inspect
 
 from .abc import Base
-from models import User, Chatter
+from models import User, Streamer
 
 if TYPE_CHECKING:
     from .context import Context
@@ -27,15 +27,19 @@ class Command(Base):
             return arg
 
         if converter is User:
-            return (
-                User.from_user_id(arg, ctx.client._http)
-                if arg.isdigit()
-                else User.from_name(arg.lstrip("@").lower(), ctx.client._http)
-            )
-        if converter is Chatter:
             if not (chatter := ctx.streamer.get_chatter(arg.lstrip("@").lower())):
-                raise Exception("Chatter not Found")
+                chatter = (
+                    User.from_user_id(arg, ctx.streamer, ctx.client._http)
+                    if arg.isdigit()
+                    else User.from_name(
+                        arg.lstrip("@").lower(), ctx.streamer, ctx.client._http
+                    )
+                )
+                if not chatter:
+                    raise Exception("User not Found")
             return chatter
+        if converter is Streamer:
+            return ctx.streamer
         return converter(arg)
 
     def _parse_args(self, ctx: Context):

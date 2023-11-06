@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class HTTP(QNetworkAccessManager):
+    URL = "https://api.twitch.tv/helix"
+
     def __init__(self, client: Client) -> None:
         super().__init__(client)
         self.client = client
@@ -52,9 +54,7 @@ class HTTP(QNetworkAccessManager):
             raise TypeError("You need to give names or ids")
         if len(users_list) > 100:
             raise Exception("Too many users to find")
-        url = "https://api.twitch.tv/helix/users?"
-        url += "&".join(users_list)
-        req = QNetworkRequest(QUrl(url))
+        req = QNetworkRequest(QUrl(f"{self.URL}/users?{'&'.join(users_list)}"))
         req.setHeader(
             QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
         )
@@ -80,7 +80,7 @@ class HTTP(QNetworkAccessManager):
     def fetch_mods(self):
         req = QNetworkRequest(
             QUrl(
-                f"https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={self.client.streamer.id}"
+                f"{self.URL}/moderation/moderators?broadcaster_id={self.client.streamer.id}"
             )
         )
         req.setHeader(
@@ -106,9 +106,7 @@ class HTTP(QNetworkAccessManager):
         return json.loads(resp.readAll().data().decode()).get("data")
 
     def fetch_user_color(self, id: int):
-        req = QNetworkRequest(
-            QUrl(f"https://api.twitch.tv/helix/chat/color?user_id={id}")
-        )
+        req = QNetworkRequest(QUrl(f"{self.URL}/chat/color?user_id={id}"))
         req.setHeader(
             QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
         )
@@ -138,7 +136,7 @@ class HTTP(QNetworkAccessManager):
             moderator = self.client.streamer
         req = QNetworkRequest(
             QUrl(
-                f"https://api.twitch.tv/helix/moderation/bans?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}"
+                f"{self.URL}/moderation/bans?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}"
             )
         )
         req.setHeader(
@@ -169,7 +167,7 @@ class HTTP(QNetworkAccessManager):
             moderator = self.client.streamer
         req = QNetworkRequest(
             QUrl(
-                f"https://api.twitch.tv/helix/moderation/chat?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}&message_id={message.id}"
+                f"{self.URL}/moderation/chat?broadcaster_id={self.client.streamer.id}&moderator_id={moderator.id}&message_id={message.id}"
             )
         )
         req.setHeader(
@@ -195,7 +193,7 @@ class HTTP(QNetworkAccessManager):
     ) -> None:
         if len(options) < 2:
             raise TypeError("Options is empty")
-        req = QNetworkRequest(QUrl(f"https://api.twitch.tv/helix/predictions"))
+        req = QNetworkRequest(QUrl(f"{self.URL}/predictions"))
         req.setHeader(
             QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
         )
@@ -222,9 +220,7 @@ class HTTP(QNetworkAccessManager):
         print(resp.readAll().data())
 
     def subscribe_event(self, token: str, data: dict[str, Any]):
-        req = QNetworkRequest(
-            QUrl("https://api.twitch.tv/helix/eventsub/subscriptions")
-        )
+        req = QNetworkRequest(QUrl(f"{self.URL}/eventsub/subscriptions"))
         req.setHeader(
             QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
         )

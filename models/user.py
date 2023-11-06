@@ -5,24 +5,11 @@ import datetime
 from dateutil.parser import parser
 
 if TYPE_CHECKING:
+    from .streamer import Streamer
     from network import HTTP
 
 
 class User:
-    __slots__ = (
-        "id",
-        "login",
-        "display_name",
-        "color",
-        "type",
-        "broadcaster_type",
-        "description",
-        "profile_image_url",
-        "offline_image_url",
-        "created_at",
-        "_http",
-    )
-
     def __init__(
         self,
         id: str,
@@ -35,6 +22,7 @@ class User:
         offline_image_url: str,
         created_at: str | datetime.datetime,
         http: HTTP,
+        streamer: Streamer,
         **_,
     ) -> None:
         self.id = int(id)
@@ -49,6 +37,7 @@ class User:
         self.created_at = (
             parser().parse(created_at) if isinstance(created_at, str) else created_at
         )
+        self.streamer = streamer
         self._http = http
 
     @property
@@ -76,12 +65,16 @@ class User:
             return False
         return self.id == obj.id
 
-    @classmethod
-    def from_user_id(cls, user_id: str, http: HTTP) -> User:
-        data = http.fetch_users(int(user_id))[0]
-        return cls(**data, http=http)
+    @property
+    def is_mod(self) -> bool:
+        return self in self.streamer.mods
 
     @classmethod
-    def from_name(cls, name: str, http: HTTP):
+    def from_user_id(cls, user_id: str, streamer: Streamer, http: HTTP) -> User:
+        data = http.fetch_users(int(user_id))[0]
+        return cls(**data, streamer=streamer, http=http)
+
+    @classmethod
+    def from_name(cls, name: str, streamer: Streamer, http: HTTP):
         data = http.fetch_users(name)[0]
-        return cls(**data, http=http)
+        return cls(**data, streamer=streamer, http=http)

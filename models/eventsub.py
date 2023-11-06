@@ -17,9 +17,12 @@ class BaseEvent:
 class _Event(BaseEvent):
     def __init__(self, event_name: str, payload: dict[str, str], http: HTTP) -> None:
         super().__init__(event_name)
-        self.chatter = http.client.streamer.get_chatter(int(payload["user_id"]))
+        streamer = http.client.streamer
+        self.chatter = streamer.get_chatter(int(payload["user_id"]))
         if not self.chatter:
-            self.chatter = User.from_user_id(payload["user_id"], http)
+            self.chatter = User.from_user_id(payload["user_id"], streamer, http)
+            streamer.add_chatter(self.chatter)
+            http.client.dispatch("on_chatter_join", self.chatter)
 
 
 class StreamOnline(BaseEvent):
@@ -44,7 +47,7 @@ class BanEvent(_Event):
         id = int(payload["moderator_user_id"])
         self.moderator = http.client.streamer.get_chatter(id)
         if not self.moderator:
-            self.moderator = User.from_user_id(id, http)
+            self.moderator = User.from_user_id(id, http.client.streamer, http)
         self.reason = payload["reason"]
         self.timeout = (
             (parse(payload["ends_at"]) - parse(payload["banned_at"])).seconds
@@ -95,7 +98,9 @@ class CheersEvent(BaseEvent):
         if not payload["is_anonymous"]:
             self.chatter = http.client.streamer.get_chatter(int(payload["user_id"]))
             if not self.chatter:
-                self.chatter = User.from_user_id(payload["user_id"], http)
+                self.chatter = User.from_user_id(
+                    payload["user_id"], http.client.streamer, http
+                )
         else:
             self.chatter = None
         self.message = payload["message"]

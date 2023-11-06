@@ -7,7 +7,7 @@ import json
 from PyQt6.QtCore import QUrl
 from PyQt6.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from models import Streamer, Chatter, Message, BanEvent, StreamOffline
+from models import Streamer, User, Message, BanEvent, StreamOffline
 from _parser import parse_message, parse_event
 
 if TYPE_CHECKING:
@@ -211,7 +211,9 @@ class WebSocket(BaseWebSocket):
             streamer = self.client.streamer
             user_id = int(data["tags"]["user-id"])
             if not (author := streamer.get_chatter(user_id)):
-                author = Chatter.from_dict(data["tags"], streamer, self._http)
+                author = User.from_user_id(
+                    data["tags"]["user-id"], streamer, self._http
+                )
                 streamer.add_chatter(author)
                 self.client.dispatch("on_chatter_join", author)
             message = Message(

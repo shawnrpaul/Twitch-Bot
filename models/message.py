@@ -2,9 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 
-from .chatter import Chatter
-
 if TYPE_CHECKING:
+    from .user import User
     from network import Client
 
 
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
 class Message:
     id: str
     client: Client
-    author: Chatter
+    author: User
     content: str
 
     def __eq__(self, other: object) -> bool:
