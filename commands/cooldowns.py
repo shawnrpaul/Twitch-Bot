@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 
 class BucketType(IntEnum):
-    default = 0
-    user = 1
+    Global = 0
+    User = 1
 
 
 class Cooldown:
@@ -39,21 +39,21 @@ class CooldownMapping:
         self.cooldown = float(cooldown)
         self._type = type
         self._cache: dict[int, Cooldown] = {}
-        if type == BucketType.default:
+        if type == BucketType.Global:
             self._cache[0] = Cooldown(rate, cooldown)
 
     def update_cooldown(self, ctx: Context):
         match self._type:
-            case BucketType.default:
+            case BucketType.Global:
                 cooldown = self._cache[0]
-            case BucketType.user:
+            case BucketType.User:
                 if not (cooldown := self._cache.get(ctx.author.id)):
                     cooldown = Cooldown(self.rate, self.cooldown)
                     self._cache[ctx.author.id] = cooldown
         cooldown.update_cooldown()
 
 
-def cooldown(rate: int, cooldown: float, type: BucketType = BucketType.default):
+def cooldown(rate: int, cooldown: float, type: BucketType = BucketType.Global):
     def decorator(func: Callable[..., Any]):
         if not isinstance(type, BucketType):
             raise TypeError("Variable type must be a BucketType")

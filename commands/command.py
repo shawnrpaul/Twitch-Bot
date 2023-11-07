@@ -117,7 +117,7 @@ def command(name: str = None):
     def decorator(func: Callable[..., Any]):
         if not isinstance(func, FunctionType):
             raise TypeError(f"The object isn't a function.")
-        if inspect.iscoroutine(func):
+        if inspect.iscoroutinefunction(func):
             raise TypeError("The function can't be asynchronous.")
         return Command(name, func)
 

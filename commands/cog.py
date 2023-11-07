@@ -1,5 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from PyQt6.QtCore import QObject
+
 from .command import Command
 from .event import Event
 
@@ -30,7 +33,11 @@ class CogMeta(type):
         return self
 
 
-class Cog(metaclass=CogMeta):
+class CogCore(type(QObject), CogMeta):
+    ...
+
+
+class Cog(metaclass=CogCore):
     __commands__: dict[str, Command]
     __events__: dict[str, list[Event]]
 
