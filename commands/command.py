@@ -9,17 +9,24 @@ from models import User, Streamer
 
 if TYPE_CHECKING:
     from .context import Context
+    from .cooldowns import CooldownMapping
 
 
 class Command(Base):
+    __cooldown__ = CooldownMapping | None
+
     def __init__(self, name: str, func: Callable[..., Any]) -> None:
         super().__init__(name, func)
+        self.__cooldown__ = getattr(func, "__cooldown__", None)
         self.params = inspect.signature(self.func).parameters.copy()
         for key, value in self.params.items():
             if isinstance(value.annotation, str):
                 self.params[key] = value.replace(
                     annotation=eval(value.annotation, func.__globals__)
                 )
+
+    def has_cooldown(self) -> bool:
+        return bool(self.__cooldown__)
 
     def _convert_types(self, ctx: Context, param: inspect.Parameter, arg: str):
         converter = param.annotation
@@ -36,7 +43,7 @@ class Command(Base):
                     )
                 )
                 if not chatter:
-                    raise Exception("User not Found")
+                    raise Exception(f"User {arg} not Found")
             return chatter
         if converter is Streamer:
             return ctx.streamer
@@ -88,6 +95,8 @@ class Command(Base):
         except Exception as e:
             return self._send_error_message(ctx, e)
         try:
+            if self.has_cooldown():
+                self.__cooldown__.update_cooldown(ctx)
             return self.func(self._instance, ctx, *ctx.args, **ctx.kwargs)
         except Exception as e:
             self._send_error_message(ctx, e)
