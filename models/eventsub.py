@@ -18,7 +18,11 @@ class _Event(BaseEvent):
     def __init__(self, event_name: str, payload: dict[str, str], http: HTTP) -> None:
         super().__init__(event_name)
         streamer = http.client.streamer
-        self.chatter = streamer.get_chatter(int(payload["user_id"]))
+        self.chatter = (
+            streamer.get_chatter(int(payload["user_id"]))
+            if not payload.get("is_anonymous", False)
+            else None
+        )
         if not self.chatter:
             self.chatter = User.from_user_id(payload["user_id"], streamer, http)
             streamer.add_chatter(self.chatter)
@@ -58,7 +62,6 @@ class BanEvent(_Event):
 
 class RaidEvent(_Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        payload["broadcaster_user_id"] = payload.pop("to_broadcaster_user_id")
         payload["user_id"] = payload.pop("from_broadcaster_user_id")
         super().__init__("raid_event", payload, http)
         self.viewers = int(payload["viewers"])
@@ -76,8 +79,9 @@ class GiftSubEvent(SubscribeEvent):
         super().__init__(payload, http)
         self.event_name = "gift_sub_event"
         self.total = payload["total"]
+        self.is_anonymous = payload["is_anonymous"]
         self.cummulative_total = (
-            payload["cumulative_total"] if not payload["is_anonymous"] else 0
+            payload["cumulative_total"] if not self.is_anonymous else 0
         )
         self.is_gift = True
 
@@ -92,18 +96,10 @@ class ReSubscribeEvent(SubscribeEvent):
         self.duration_months = payload["duration_months"]
 
 
-class CheersEvent(BaseEvent):
+class CheersEvent(_Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
-        super().__init__("cheers_event")
-        if not payload["is_anonymous"]:
-            streamer = http.client.streamer
-            self.chatter = streamer.get_chatter(int(payload["user_id"]))
-            if not self.chatter:
-                self.chatter = User.from_user_id(payload["user_id"], streamer, http)
-                streamer.add_chatter(self.chatter)
-                http.client.dispatch("on_chatter_join", self.chatter)
-        else:
-            self.chatter = None
+        super().__init__("cheers_event", payload, http)
+        self.is_anonymous = payload["is_anonymous"]
         self.message = payload["message"]
         self.bits = int(payload["bits"])
 
