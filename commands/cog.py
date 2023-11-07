@@ -37,7 +37,7 @@ class CogCore(type(QObject), CogMeta):
     ...
 
 
-class Cog(metaclass=CogCore):
+class Cog(QObject, metaclass=CogCore):
     __commands__: dict[str, Command]
     __events__: dict[str, list[Event]]
 
@@ -52,6 +52,7 @@ class Cog(metaclass=CogCore):
         return self
 
     def __init__(self, client: Client) -> None:
+        super().__init__()
         self.client = client
 
     def unload(self):

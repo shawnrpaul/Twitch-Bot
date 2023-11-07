@@ -57,14 +57,17 @@ class Client(QObject):
             args.remove("\U000e0000")
         self.invoke(data["command"]["botCommand"], message, args)
 
+    def get_command(self, name: str):
+        return self.__commands__.get(name)
+
     def invoke(self, name: str, message: Message, args: list[str]):
-        if not (command := self.__commands__.get(name)):
+        if not (command := self.get_command(name)):
             return
         ctx = Context(self, message, command, args)
         command(ctx)
 
-    def send_message(self, message: str) -> Message:
-        if not self.streamer:
+    def send_message(self, message: str) -> Message | None:
+        if not self.streamer or not message:
             return
         self._ws.sendTextMessage(f"PRIVMSG #{self._ws.nick} :{message}\r\n")
         message = Message(0, self, self.streamer, message)

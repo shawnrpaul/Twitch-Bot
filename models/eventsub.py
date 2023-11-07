@@ -14,7 +14,7 @@ class BaseEvent:
         self.event_name = event_name
 
 
-class _Event(BaseEvent):
+class Event(BaseEvent):
     def __init__(self, event_name: str, payload: dict[str, str], http: HTTP) -> None:
         super().__init__(event_name)
         streamer = http.client.streamer
@@ -40,12 +40,12 @@ class StreamOffline(BaseEvent):
         super().__init__("on_stream_offline")
 
 
-class FollowEvent(_Event):
+class FollowEvent(Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__("follow_event", payload, http)
 
 
-class BanEvent(_Event):
+class BanEvent(Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__("ban_event", payload, http)
         id = int(payload["moderator_user_id"])
@@ -60,14 +60,14 @@ class BanEvent(_Event):
         )
 
 
-class RaidEvent(_Event):
+class RaidEvent(Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         payload["user_id"] = payload.pop("from_broadcaster_user_id")
         super().__init__("raid_event", payload, http)
         self.viewers = int(payload["viewers"])
 
 
-class SubscribeEvent(_Event):
+class SubscribeEvent(Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__("subscribe_event", payload, http)
         self.tier = payload["tier"]
@@ -96,7 +96,7 @@ class ReSubscribeEvent(SubscribeEvent):
         self.duration_months = payload["duration_months"]
 
 
-class CheersEvent(_Event):
+class CheersEvent(Event):
     def __init__(self, payload: dict[str, str], http: HTTP) -> None:
         super().__init__("cheers_event", payload, http)
         self.is_anonymous = payload["is_anonymous"]
@@ -104,7 +104,7 @@ class CheersEvent(_Event):
         self.bits = int(payload["bits"])
 
 
-class RewardEvent(_Event):
+class RewardEvent(Event):
     class Reward:
         def __init__(
             self,

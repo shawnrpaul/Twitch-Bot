@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class Command(Base):
-    __cooldown__ = CooldownMapping | None
+    __cooldown__: CooldownMapping | None
 
     def __init__(self, name: str, func: Callable[..., Any]) -> None:
         super().__init__(name, func)

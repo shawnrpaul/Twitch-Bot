@@ -44,6 +44,14 @@ class User:
     def name(self):
         return self.login
 
+    @property
+    def mention(self) -> str:
+        return f"@{self.name}"
+
+    @property
+    def is_mod(self) -> bool:
+        return self in self.streamer.mods
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, User):
             return False
@@ -64,10 +72,6 @@ class User:
         if not isinstance(obj, User):
             return False
         return self.id == obj.id
-
-    @property
-    def is_mod(self) -> bool:
-        return self in self.streamer.mods
 
     @classmethod
     def from_user_id(cls, user_id: str, streamer: Streamer, http: HTTP) -> User:

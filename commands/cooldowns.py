@@ -23,11 +23,11 @@ class Cooldown:
 
     def update_cooldown(self):
         now = time.time()
-        if self._current < self.rate:
-            self._current += 1
+        if now >= self._last + self.cooldown:
+            self._current = 1
             self._last = now
-        elif now >= self._last + self.cooldown:
-            self._current = 0
+        elif self._current < self.rate:
+            self._current += 1
             self._last = now
         else:
             raise CommandOnCooldown(self._last + self.cooldown - now)

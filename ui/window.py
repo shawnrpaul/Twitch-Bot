@@ -60,6 +60,7 @@ class MainWindow(QMainWindow):
     def close(self):
         self.systemTray.hide()
         self.client.close()
+        self.client.dispatch("on_close")
         self.logs.close()
         self.showMinimized() if self.isHidden() else ...
         return super().close()
