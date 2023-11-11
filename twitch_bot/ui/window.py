@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import logging
-from PyQt6 import QtGui
 
 from PyQt6.QtGui import QIcon, QCloseEvent
 from PyQt6.QtWidgets import QMainWindow
@@ -11,7 +10,7 @@ from .sidebar import Sidebar
 from .stack import Stack
 from .systemtray import SystemTray
 from .logs import Logs
-from network import Client
+from twitch_bot.network import Client
 
 if TYPE_CHECKING:
     from .sidebar import Sidebar
@@ -41,7 +40,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Twitch Bot")
         self.setWindowIcon(QIcon("icons/twitch.ico"))
-        self.setStyleSheet(open("styles.qss").read())
+        self.setStyleSheet(open("data/styles.qss").read())
 
         self.stack.cogsPage.addCogs()
         self.client.start()

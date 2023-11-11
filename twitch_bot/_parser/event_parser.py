@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
-from models.eventsub import (
+from twitch_bot.models.eventsub import (
     StreamOnline,
     StreamOffline,
     FollowEvent,
@@ -15,8 +15,8 @@ from models.eventsub import (
 )
 
 if TYPE_CHECKING:
-    from network import HTTP
-    from models.eventsub import BaseEvent
+    from twitch_bot.network import HTTP
+    from twitch_bot.models.eventsub import BaseEvent
 
 
 TYPES: dict[str, BaseEvent] = {

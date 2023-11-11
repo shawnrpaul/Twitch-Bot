@@ -6,7 +6,7 @@ from .user import User
 from dateutil.parser import parse
 
 if TYPE_CHECKING:
-    from network import HTTP
+    from twitch_bot.network import HTTP
 
 
 class BaseEvent:

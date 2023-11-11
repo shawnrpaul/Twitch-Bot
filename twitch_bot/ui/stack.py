@@ -21,8 +21,7 @@ from PyQt6.QtWidgets import (
 
 if TYPE_CHECKING:
     from .window import MainWindow
-    from .sidebar import SidebarLabel
-    from commands import Cog
+    from twitch_bot.commands import Cog
 
 __all__ = ("Stack",)
 

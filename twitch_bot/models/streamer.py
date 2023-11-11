@@ -6,7 +6,7 @@ from .user import User
 
 if TYPE_CHECKING:
     from .message import Message
-    from network import HTTP
+    from twitch_bot.network import HTTP
 
 
 class Streamer(User):

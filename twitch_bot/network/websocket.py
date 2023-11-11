@@ -7,8 +7,8 @@ import json
 from PyQt6.QtCore import QUrl
 from PyQt6.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from models import Streamer, User, Message, BanEvent, StreamOffline
-from _parser import parse_message, parse_event
+from twitch_bot.models import Streamer, User, Message, BanEvent, StreamOffline
+from twitch_bot._parser import parse_message, parse_event
 
 if TYPE_CHECKING:
     from .client import Client

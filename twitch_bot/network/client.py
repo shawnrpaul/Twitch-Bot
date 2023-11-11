@@ -9,13 +9,12 @@ from PyQt6.QtCore import QObject
 from .http import HTTP
 from .websocket import WebSocket, EventSub
 from .exceptions import CogNotFound, CogExistsError
-from commands import Context
-from models import User, Message
-import commands
+from twitch_bot.models import User, Message
+import twitch_bot.commands as commands
 
 if TYPE_CHECKING:
-    from ui import MainWindow
-    from models import Streamer
+    from twitch_bot.ui import MainWindow
+    from twitch_bot.models import Streamer
 
 
 class Client(QObject):
@@ -64,7 +63,7 @@ class Client(QObject):
     def invoke(self, name: str, message: Message, args: list[str]):
         if not (command := self.get_command(name)):
             return
-        ctx = Context(self, message, command, args)
+        ctx = commands.Context(self, message, command, args)
         command(ctx)
 
     def send_message(self, message: str) -> Message | None:
@@ -91,7 +90,7 @@ class Client(QObject):
         print(f"Ignoring exception in event {event.name}")
         traceback.print_exception(type(error), error, error.__traceback__)
 
-    def on_command_error(self, ctx: Context, error: Exception):
+    def on_command_error(self, ctx: commands.Context, error: Exception):
         print(f"Ignoring exception in command {ctx.command.name}")
         traceback.print_exception(type(error), error, error.__traceback__)
 

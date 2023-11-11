@@ -1,4 +1,4 @@
-from exceptions import BotError
+from twitch_bot.exceptions import BotError
 
 __all__ = ("UserNotFound",)
 

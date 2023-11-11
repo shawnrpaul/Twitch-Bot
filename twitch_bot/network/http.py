@@ -7,7 +7,7 @@ from PyQt6.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManage
 from .exceptions import HTTPError, RequestError
 
 if TYPE_CHECKING:
-    from models import Message, User
+    from twitch_bot.models import Message, User
     from .client import Client
 
 

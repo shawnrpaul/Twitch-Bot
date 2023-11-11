@@ -5,7 +5,7 @@ import traceback
 import inspect
 
 from .abc import Base
-from models import User, Streamer, UserNotFound
+from twitch_bot.models import User, Streamer, UserNotFound
 
 if TYPE_CHECKING:
     from .context import Context

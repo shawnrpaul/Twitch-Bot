@@ -8,7 +8,7 @@ from .exceptions import UserNotFound
 
 if TYPE_CHECKING:
     from .streamer import Streamer
-    from network import HTTP
+    from twitch_bot.network import HTTP
 
 
 class User:

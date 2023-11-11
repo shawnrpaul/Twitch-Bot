@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QApplication
-from ui import MainWindow
+from twitch_bot.ui import MainWindow
 
 
 app = QApplication([])

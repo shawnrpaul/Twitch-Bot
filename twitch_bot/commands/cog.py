@@ -8,7 +8,7 @@ from .event import Event
 
 
 if TYPE_CHECKING:
-    from network import Client
+    from twitch_bot.network import Client
 
 
 class CogMeta(type):

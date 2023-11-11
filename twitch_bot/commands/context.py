@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from models import Message, Streamer
-    from network import Client
-    from commands import Command
+    from twitch_bot.models import Message, Streamer
+    from twitch_bot.network import Client
+    from twitch_bot.commands import Command
 
 
 class Context:

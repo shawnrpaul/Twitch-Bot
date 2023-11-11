@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from .user import User
-    from network import Client
+    from twitch_bot.network import Client
 
 
 @dataclass(repr=True, slots=True)
