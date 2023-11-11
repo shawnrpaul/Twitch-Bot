@@ -153,10 +153,8 @@ class EventSub(BaseWebSocket):
             payload = data["payload"]
             if payload["subscription"]["type"] == "channel.moderator.add":
                 self.client.streamer._mods.append(int(payload["event"]["user_id"]))
-                print(self.client.streamer.mods)
             elif payload["subscription"]["type"] == "channel.moderator.remove":
                 self.client.streamer._mods.remove(int(payload["event"]["user_id"]))
-                print(self.client.streamer.mods)
             elif event := parse_event(payload, self._http):
                 if isinstance(event, BanEvent):
                     self.client.streamer.remove_chatter(event.chatter)

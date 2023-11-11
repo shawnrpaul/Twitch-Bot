@@ -77,7 +77,7 @@ class Streamer(User):
         if not isinstance(user, User):
             raise TypeError("A User object is required")
         if isinstance(reason, str) and len(reason) > 500:
-            raise Exception("Reason must a be a max of 500 characters")
+            raise TypeError("Reason must a be a max of 500 characters")
         self._http.ban_user(user.id, moderator, reason)
 
     def timeout_user(
@@ -91,5 +91,5 @@ class Streamer(User):
         if not isinstance(user, User):
             raise TypeError("A User object is required")
         if isinstance(reason, str) and len(reason) > 500:
-            raise Exception("Reason must a be a max of 500 characters")
+            raise TypeError("Reason must a be a max of 500 characters")
         self._http.ban_user(user.id, moderator, reason, duration)

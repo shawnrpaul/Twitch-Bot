@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import logging
+from PyQt6 import QtGui
 
 from PyQt6.QtGui import QIcon, QCloseEvent
 from PyQt6.QtWidgets import QMainWindow
@@ -20,8 +21,6 @@ if TYPE_CHECKING:
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowIcon(QIcon("icons/twitch.ico"))
-        self.setWindowTitle("Twitch Bot")
         self.client = Client(self)
 
         self.body = Body(self)
@@ -39,16 +38,21 @@ class MainWindow(QMainWindow):
         self.body.addWidget(self.sidebar, 3)
         self.body.addWidget(self.stack, 10)
         self.setCentralWidget(self.body)
+
+        self.setWindowTitle("Twitch Bot")
+        self.setWindowIcon(QIcon("icons/twitch.ico"))
         self.setStyleSheet(open("styles.qss").read())
 
         self.stack.cogsPage.addCogs()
         self.client.start()
 
-    def showMessage(self, message: str, time=3000):
-        self.systemTray.showMessage(message, time)
+    def setWindowIcon(self, icon: QIcon) -> None:
+        self.logs.setWindowIcon(icon)
+        return super().setWindowIcon(icon)
 
-    def log(self, text: str, level=logging.ERROR):
-        self.logs.log(text, level)
+    def setStyleSheet(self, styleSheet: str | None) -> None:
+        self.logs.setStyleSheet(styleSheet)
+        return super().setStyleSheet(styleSheet)
 
     def closeEvent(self, event: QCloseEvent):
         if self.systemTray.isVisible():
@@ -64,3 +68,9 @@ class MainWindow(QMainWindow):
         self.logs.close()
         self.showMinimized() if self.isHidden() else ...
         return super().close()
+
+    def showMessage(self, message: str, time=3000):
+        self.systemTray.showMessage(message, time)
+
+    def log(self, text: str, level=logging.ERROR):
+        self.logs.log(text, level)

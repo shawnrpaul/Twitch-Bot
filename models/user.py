@@ -4,6 +4,8 @@ import datetime
 
 from dateutil.parser import parser
 
+from .exceptions import UserNotFound
+
 if TYPE_CHECKING:
     from .streamer import Streamer
     from network import HTTP
@@ -75,10 +77,14 @@ class User:
 
     @classmethod
     def from_user_id(cls, user_id: str, streamer: Streamer, http: HTTP) -> User:
-        data = http.fetch_users(int(user_id))[0]
+        data = http.fetch_users(int(user_id))
+        if not data:
+            raise UserNotFound(f"User with id `{user_id}` couldnt be found")
         return cls(**data, streamer=streamer, http=http)
 
     @classmethod
     def from_name(cls, name: str, streamer: Streamer, http: HTTP):
-        data = http.fetch_users(name)[0]
+        data = http.fetch_users(name)
+        if not data:
+            raise UserNotFound(f"User with name `{name}` couldnt be found")
         return cls(**data, streamer=streamer, http=http)

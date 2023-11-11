@@ -8,6 +8,7 @@ from PyQt6.QtCore import QObject
 
 from .http import HTTP
 from .websocket import WebSocket, EventSub
+from .exceptions import CogNotFound, CogExistsError
 from commands import Context
 from models import User, Message
 import commands
@@ -26,8 +27,8 @@ class Client(QObject):
         super().__init__(window)
         self._window = window
         self._settings = self._load_settings()
-        self._client_id = self._settings["client-id"]
-        self._token = self._settings["token"]
+        self._client_id: str = self._settings["client-id"]
+        self._token: str = self._settings["token"]
         self._user_id = None
         self._http = HTTP(self)
         self._ws = WebSocket(self)
@@ -84,7 +85,7 @@ class Client(QObject):
         self.dispatch("on_message", message)
 
     def on_stream_offline(self, _):
-        self.streamer.chatters.clear()
+        self.streamer._chatters.clear()
 
     def on_event_error(self, event: commands.Event, error: Exception):
         print(f"Ignoring exception in event {event.name}")
@@ -97,7 +98,7 @@ class Client(QObject):
     def add_cog(self, cog: commands.Cog) -> commands.Cog:
         name = cog.__class__.__name__
         if self.__cogs__.get(name):
-            raise Exception(f"Cog {name} already exists")
+            raise CogExistsError(name)
         self.__cogs__[name] = cog
         for command in cog.__commands__.keys():
             if self.__commands__.get(command):
@@ -112,10 +113,11 @@ class Client(QObject):
         return cog
 
     def remove_cog(self, cog: commands.Cog) -> None:
-        if not self.__cogs__.pop(cog.__class__.__name__, None):
-            raise Exception(f"Cog {cog.__class__.__name__} doesn't exist")
+        name = cog.__class__.__name__
+        if not self.__cogs__.pop(name, None):
+            raise CogNotFound(name)
         for key in cog.__commands__:
-            self.__commands__.pop(key)
+            self.__commands__.pop(key, None)
         for name, events in cog.__events__.items():
             cli_evnts = self.__events__.get(name)
             for event in events:

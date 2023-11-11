@@ -4,6 +4,7 @@ import json
 
 from PyQt6.QtCore import QUrl, QEventLoop
 from PyQt6.QtNetwork import QNetworkRequest, QNetworkReply, QNetworkAccessManager
+from .exceptions import HTTPError, RequestError
 
 if TYPE_CHECKING:
     from models import Message, User
@@ -53,7 +54,7 @@ class HTTP(QNetworkAccessManager):
         else:
             raise TypeError("You need to give names or ids")
         if len(users_list) > 100:
-            raise Exception("Too many users to find")
+            raise TypeError("Too many users to find")
         req = QNetworkRequest(QUrl(f"{self.URL}/users?{'&'.join(users_list)}"))
         req.setHeader(
             QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json"
@@ -64,17 +65,18 @@ class HTTP(QNetworkAccessManager):
         req.setRawHeader("Client-Id".encode(), self.client._client_id.encode())
         resp = self.get(req)
         if not resp:
-            raise Exception("Failed to create request")
+            raise RequestError
         loop = QEventLoop(self)
         resp.finished.connect(lambda: loop.quit())
         loop.exec()
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception(
-                f"The request exceeded the maximum allowed number of user query parameters."
+            raise HTTPError(
+                status_code,
+                "The request exceeded the maximum allowed number of user query parameters.",
             )
         if status_code == 401:
-            raise Exception("Invalid or unauthorized Access Token passed.")
+            raise HTTPError(status_code, "Invalid or unauthorized Access Token passed.")
         return json.loads(resp.readAll().data().decode()).get("data")
 
     def fetch_mods(self):
@@ -92,17 +94,18 @@ class HTTP(QNetworkAccessManager):
         req.setRawHeader("Client-Id".encode(), self.client._client_id.encode())
         resp = self.get(req)
         if not resp:
-            raise Exception("Failed to create request")
+            raise RequestError
         loop = QEventLoop(self)
         resp.finished.connect(lambda: loop.quit())
         loop.exec()
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception(
-                f"The request exceeded the maximum allowed number of user query parameters."
+            raise HTTPError(
+                status_code,
+                "The request exceeded the maximum allowed number of user query parameters.",
             )
         if status_code == 401:
-            raise Exception("Invalid or unauthorized Access Token passed.")
+            raise HTTPError(status_code, "Invalid or unauthorized Access Token passed.")
         return json.loads(resp.readAll().data().decode()).get("data")
 
     def fetch_user_color(self, id: int):
@@ -116,17 +119,18 @@ class HTTP(QNetworkAccessManager):
         req.setRawHeader("Client-Id".encode(), self.client._client_id.encode())
         resp = self.get(req)
         if not resp:
-            raise Exception("Failed to create request")
+            raise RequestError
         loop = QEventLoop(self)
         resp.finished.connect(lambda: loop.quit())
         loop.exec()
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception(
-                f"The request exceeded the maximum allowed number of user query parameters."
+            raise HTTPError(
+                status_code,
+                "The request exceeded the maximum allowed number of user query parameters.",
             )
         if status_code == 401:
-            raise Exception("Invalid or unauthorized Access Token passed.")
+            raise HTTPError(status_code, "Invalid or unauthorized Access Token passed.")
         return (
             json.loads(resp.readAll().data().decode()).get("data")[0].get("color", "")
         )
@@ -152,15 +156,17 @@ class HTTP(QNetworkAccessManager):
         resp = self.post(req, json.dumps(data).encode())
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception(f"Unable to ban the user.")
+            raise HTTPError(status_code, "Unable to ban the user.")
         if status_code == 401:
-            raise Exception("You are not authorized to ban the user.")
+            raise HTTPError(status_code, "You are not authorized to ban the user.")
         if status_code == 403:
-            raise Exception(f"The given moderator isn't a moderator.")
+            raise HTTPError(status_code, "The given moderator isn't a moderator.")
         if status_code == 409:
-            raise Exception(f"Someone else is modifying the user")
+            raise HTTPError(status_code, "Someone else is modifying the user")
         if status_code == 423:
-            raise Exception(f"You have made too many requests in the given channel")
+            raise HTTPError(
+                status_code, "You have made too many requests in the given channel"
+            )
 
     def delete_message(self, message: Message, moderator: User = None):
         if not moderator:
@@ -180,13 +186,17 @@ class HTTP(QNetworkAccessManager):
         resp = self.deleteResource(req)
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception(f"Unable to delete message.")
+            raise HTTPError(status_code, "Unable to delete message.")
         if status_code == 401:
-            raise Exception("You are not authorized to delete the message.")
+            raise HTTPError(
+                status_code, "You are not authorized to delete the message."
+            )
         if status_code == 403:
-            raise Exception(f"The given moderator isn't a moderator.")
+            raise HTTPError(status_code, "The given moderator isn't a moderator.")
         if status_code == 404:
-            raise Exception(f"Message not found or was created more than 6 hrs ago")
+            raise HTTPError(
+                status_code, "Message not found or was created more than 6 hrs ago"
+            )
 
     def create_prediction(
         self, title: str, options: list[str], length: int = 120
@@ -212,11 +222,13 @@ class HTTP(QNetworkAccessManager):
         resp = self.post(req, json.dumps(data).encode())
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception("Bad Request")
+            raise HTTPError(status_code, "Bad Request")
         if status_code == 401:
-            raise Exception("You are not authorized to create a prediction.")
+            raise HTTPError(
+                status_code, "You are not authorized to create a prediction."
+            )
         if status_code == 429:
-            raise Exception("You have been rate-limited.")
+            raise HTTPError(status_code, "You have been rate-limited.")
         print(resp.readAll().data())
 
     def subscribe_event(self, token: str, data: dict[str, Any]):
@@ -229,15 +241,19 @@ class HTTP(QNetworkAccessManager):
         resp = self.post(req, json.dumps(data).encode())
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if status_code == 400:
-            raise Exception("Bad Request")
+            raise HTTPError(status_code, "Bad Request")
         if status_code == 401:
-            raise Exception("You are not authorized to subscribe to this event.")
+            raise HTTPError(
+                status_code, "You are not authorized to subscribe to this event."
+            )
         if status_code == 403:
-            raise Exception("Your access token is missing the required scope.")
+            raise HTTPError(
+                status_code, "Your access token is missing the required scope."
+            )
         if status_code == 409:
-            raise Exception("You're already subscribed to this event.")
+            raise HTTPError(status_code, "You're already subscribed to this event.")
         if status_code == 429:
-            raise Exception("You have been rate-limited.")
+            raise HTTPError(status_code, "You have been rate-limited.")
 
     def validate(self) -> QNetworkReply:
         req = QNetworkRequest(QUrl("https://id.twitch.tv/oauth2/validate"))
@@ -249,13 +265,15 @@ class HTTP(QNetworkAccessManager):
         )
         resp = self.get(req)
         if not resp:
-            raise Exception("Failed to create request")
+            raise RequestError
         loop = QEventLoop(self)
         resp.finished.connect(lambda: loop.quit())
         loop.exec()
         status_code = resp.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)
         if 200 > status_code < 300:
-            raise Exception(f"Unable to validate Access Token: {resp.errorString()}")
+            raise HTTPError(
+                status_code, "Unable to validate Access Token: {resp.errorString()}"
+            )
         if status_code == 401:
-            raise Exception("Invalid or unauthorized Access Token passed.")
+            raise HTTPError(status_code, "Invalid or unauthorized Access Token passed.")
         return json.loads(resp.readAll().data().decode())

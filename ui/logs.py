@@ -36,10 +36,8 @@ class Logs(QPlainTextEdit):
         sys.excepthook = self.excepthook
 
         self.setWindowTitle("Log")
-        self.setWindowIcon(QIcon("icons/twitch.ico"))
         self.resize(700, 350)
 
-        self.setStyleSheet(open("styles.qss").read())
         self.setContentsMargins(0, 0, 0, 0)
         self.setReadOnly(True)
 

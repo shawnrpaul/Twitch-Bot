@@ -5,7 +5,7 @@ import traceback
 import inspect
 
 from .abc import Base
-from models import User, Streamer
+from models import User, Streamer, UserNotFound
 
 if TYPE_CHECKING:
     from .context import Context
@@ -43,7 +43,7 @@ class Command(Base):
                     )
                 )
                 if not chatter:
-                    raise Exception(f"User {arg} not Found")
+                    raise UserNotFound(f"User {arg} not Found")
             return chatter
         if converter is Streamer:
             return ctx.streamer
