@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import logging
 
 from PyQt6.QtGui import QIcon, QCloseEvent
-from PyQt6.QtWidgets import QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow
 
 from .body import Body
 from .sidebar import Sidebar
@@ -61,12 +61,8 @@ class MainWindow(QMainWindow):
         return super().closeEvent(event)
 
     def close(self):
-        self.systemTray.hide()
-        self.client.close()
         self.client.dispatch("on_close")
-        self.logs.close()
-        self.showMinimized() if self.isHidden() else ...
-        return super().close()
+        return QApplication.instance().exit()
 
     def showMessage(self, message: str, time=3000):
         self.systemTray.showMessage(message, time)
