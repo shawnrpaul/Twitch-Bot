@@ -3,13 +3,14 @@ from typing import TYPE_CHECKING
 import logging
 
 from PyQt6.QtGui import QIcon, QCloseEvent
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QMainWindow
 
 from .body import Body
 from .sidebar import Sidebar
 from .stack import Stack
 from .systemtray import SystemTray
 from .logs import Logs
+from twitch_bot.core import Application
 from twitch_bot.network import Client
 
 if TYPE_CHECKING:
@@ -62,7 +63,7 @@ class MainWindow(QMainWindow):
 
     def close(self):
         self.client.dispatch("on_close")
-        return QApplication.instance().exit()
+        return Application.instance().close()
 
     def showMessage(self, message: str, time=3000):
         self.systemTray.showMessage(message, time)
