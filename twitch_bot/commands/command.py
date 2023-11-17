@@ -3,6 +3,7 @@ from typing import Any, Callable, TYPE_CHECKING
 from types import FunctionType
 import traceback
 import inspect
+import asyncio
 
 from .abc import Base
 from twitch_bot.models import User, Streamer, UserNotFound
@@ -89,7 +90,7 @@ class Command(Base):
                 )
                 break
 
-    def __call__(self, ctx: Context) -> Any:
+    def _run(self, ctx: Context):
         try:
             self._parse_args(ctx)
         except Exception as e:
@@ -100,6 +101,24 @@ class Command(Base):
             return self.func(self._instance, ctx, *ctx.args, **ctx.kwargs)
         except Exception as e:
             self._send_error_message(ctx, e)
+
+    async def _arun(self, ctx: Context):
+        try:
+            self._parse_args(ctx)
+        except Exception as e:
+            return self._send_error_message(ctx, e)
+        try:
+            if self.has_cooldown():
+                self.__cooldown__.update_cooldown(ctx)
+            return await self.func(self._instance, ctx, *ctx.args, **ctx.kwargs)
+        except Exception as e:
+            self._send_error_message(ctx, e)
+
+    def __call__(self, ctx: Context) -> Any:
+        if inspect.iscoroutinefunction(self.func):
+            asyncio.create_task(self._run(ctx))
+        else:
+            self._run()
 
     def _send_error_message(self, ctx: Context, error: Exception) -> None:
         if self._error:
@@ -117,8 +136,6 @@ def command(name: str = None):
     def decorator(func: Callable[..., Any]):
         if not isinstance(func, FunctionType):
             raise TypeError(f"The object isn't a function.")
-        if inspect.iscoroutinefunction(func):
-            raise TypeError("The function can't be asynchronous.")
         return Command(name, func)
 
     return decorator

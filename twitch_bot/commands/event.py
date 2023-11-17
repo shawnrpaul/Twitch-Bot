@@ -12,13 +12,23 @@ class Event(Base):
     def __init__(self, event: str, func: Callable[..., Any]) -> None:
         super().__init__(event, func)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def _run(self, *args: Any, **kwargs: Any) -> None:
         try:
-            if inspect.iscoroutinefunction(self.func):
-                return asyncio.create_task(self.func(self._instance, *args, **kwargs))
             self.func(self._instance, *args, **kwargs)
         except Exception as e:
             self._send_error_message(e)
+
+    async def _arun(self, *args: Any, **kwargs: Any):
+        try:
+            await self.func(self._instance, *args, **kwargs)
+        except Exception as e:
+            self._send_error_message(e)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        if inspect.iscoroutinefunction(self.func):
+            asyncio.create_task(self._run(*args, **kwargs))
+        else:
+            self._run()
 
     def _send_error_message(self, error: Exception) -> None:
         if self._error:
