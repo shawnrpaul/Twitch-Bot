@@ -6,7 +6,6 @@ import traceback
 import sys
 import os
 
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QPlainTextEdit
 
 if TYPE_CHECKING:
@@ -14,11 +13,15 @@ if TYPE_CHECKING:
     from types import TracebackType
 
 
-logging.basicConfig(
-    filename="twitch-bot.log",
-    format="%(levelname)s:%(asctime)s:%(message)s",
-    level=logging.ERROR,
-)
+class Stdout:
+    def __init__(self, logs: Logs) -> None:
+        self.logs = logs
+
+    def write(self, text: str):
+        self.logs.setPlainText(f"{self.logs.toPlainText()}{text}")
+
+    def flush(self) -> None:
+        pass
 
 
 class Logs(QPlainTextEdit):
@@ -32,8 +35,8 @@ class Logs(QPlainTextEdit):
             lambda: self.show() if self.isHidden() else self.hide()
         )
 
-        sys.stdout.write = sys.stderr.write = self.write
-        sys.excepthook = self.excepthook
+        # sys.stdout = sys.stderr = Stdout(self)
+        # sys.excepthook = self.excepthook
 
         self.setWindowTitle("Log")
         self.resize(700, 350)
@@ -45,11 +48,8 @@ class Logs(QPlainTextEdit):
     def window(self) -> MainWindow:
         return self._window
 
-    def write(self, text: str):
-        self.setPlainText(f"{self.toPlainText()}{text}")
-
     def log(self, text: str, level=logging.ERROR):
-        self.write(text)
+        print(text)
         logging.log(msg=text, level=level)
 
     def excepthook(
@@ -58,7 +58,6 @@ class Logs(QPlainTextEdit):
         exc_value: Optional[BaseException],
         exc_tb: TracebackType,
     ):
-        self.window.close()
         tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
         cwd = Path(os.path.dirname(os.path.dirname(__file__))).absolute()
         try:
@@ -70,4 +69,5 @@ class Logs(QPlainTextEdit):
             logging.error(f"{file.name}({line}) - {exc_type.__name__}: {exc_value}")
         except Exception:
             logging.error(f"{exc_type.__name__}: {exc_value}")
+        self.window.close()
         return sys.__excepthook__(exc_type, exc_value, exc_tb)

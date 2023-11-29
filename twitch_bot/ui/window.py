@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import logging
 
+from PyQt6.QtCore import QFileSystemWatcher
 from PyQt6.QtGui import QIcon, QCloseEvent
 from PyQt6.QtWidgets import QMainWindow
 
@@ -10,18 +11,17 @@ from .sidebar import Sidebar
 from .stack import Stack
 from .systemtray import SystemTray
 from .logs import Logs
-from twitch_bot.core import Application
-from twitch_bot.network import Client
 
 if TYPE_CHECKING:
+    from twitch_bot import Client
     from .sidebar import Sidebar
     from .stack import Stack
 
 
 class MainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, client: Client) -> None:
         super().__init__()
-        self.client = Client(self)
+        self.client = client
 
         self.body = Body(self)
         self.systemTray = SystemTray(self)
@@ -35,16 +35,20 @@ class MainWindow(QMainWindow):
             lambda: self.logs.show() if self.logs.isHidden() else self.logs.hide()
         )
 
+        styles_path = "data/styles.qss"
+        self.client.application.setStyleSheet(open(styles_path).read())
+        self._styles = QFileSystemWatcher()
+        self._styles.addPath(styles_path)
+        self._styles.fileChanged.connect(
+            lambda path: self.client.application.setStyleSheet(open(path).read())
+        )
+
         self.body.addWidget(self.sidebar, 3)
         self.body.addWidget(self.stack, 10)
         self.setCentralWidget(self.body)
 
         self.setWindowTitle("Twitch Bot")
         self.setWindowIcon(QIcon("icons/twitch.ico"))
-        self.setStyleSheet(open("data/styles.qss").read())
-
-        self.stack.cogsPage.addCogs()
-        self.client.start()
 
     def setWindowIcon(self, icon: QIcon) -> None:
         self.logs.setWindowIcon(icon)
@@ -61,9 +65,11 @@ class MainWindow(QMainWindow):
             return event.ignore()
         return super().closeEvent(event)
 
-    def close(self):
-        self.client.dispatch("on_close")
-        return Application.instance().close()
+    def close(self) -> None:
+        self.hide()
+        self.client.loop.create_task(self.client.close()).add_done_callback(
+            lambda _: self.client.loop.stop()
+        )
 
     def showMessage(self, message: str, time=3000):
         self.systemTray.showMessage(message, time)

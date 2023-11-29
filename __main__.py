@@ -1,7 +1,3 @@
-from twitch_bot.core import Application
-from twitch_bot.ui import MainWindow
+from twitch_bot import Client
 
-
-app = Application([])
-window = MainWindow()
-app.start()
+Client(**Client.load_settings()).run()

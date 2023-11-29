@@ -15,6 +15,7 @@ class SidebarLabel(QLabel):
         self._window = window
         self.setWidget(widget)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover)
 
     @property
     def window(self) -> MainWindow:
