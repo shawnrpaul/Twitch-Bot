@@ -1,15 +1,20 @@
+from typing import Coroutine
 import traceback
 import importlib
 import asyncio
+import inspect
 import json
-import re
+import sys
 import os
+import re
 
 from PyQt6.QtWidgets import QApplication
 from twitch_bot import MainWindow, Message, Channel
 from twitch_bot.ext import commands, eventsub, routines
 
 __all__ = ("Client",)
+
+sys.path.append(os.path.join(sys.path[0], "site-packages"))
 
 
 class Client(commands.Bot):
@@ -18,15 +23,23 @@ class Client(commands.Bot):
         self._es = eventsub.EventSubWSClient(self)
         self._token: str = kwargs.get("token") or args[0]
         self._messages: dict[str, Message] = {}
-        self.tasks: dict[str, tuple[routines.Routine]] = {}
+        self.routines: dict[str, tuple[routines.Routine]] = {}
         self.application = QApplication([])
         self.window = MainWindow(self)
         self.streamer = None
+        self._tasks: list[asyncio.Task] = []
 
     @staticmethod
     def load_settings() -> None:
         with open("data/settings.json") as f:
             return json.load(f)
+
+    def create_task(self, coro: Coroutine) -> None:
+        if not inspect.iscoroutine(coro):
+            raise TypeError("The function must be a coroutine")
+        task = self.loop.create_task(coro)
+        task.add_done_callback(self._tasks.remove)
+        self._tasks.append(task)
 
     def add_cogs(self) -> None:
         for path in os.listdir("cogs"):
@@ -52,11 +65,11 @@ class Client(commands.Bot):
             if isinstance(getattr(cog, attr, None), routines.Routine)
         )
         if task_list:
-            self.tasks[cog.name] = task_list
+            self.routines[cog.name] = task_list
         self.window.stack.addCog(cog)
 
     def remove_cog(self, cog: commands.Cog) -> None:
-        tasks = self.tasks.pop(cog.name, ())
+        tasks = self.routines.pop(cog.name, ())
         for task in tasks:
             task.stop()
         self._cogs.pop(cog.name)

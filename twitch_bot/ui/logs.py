@@ -35,8 +35,8 @@ class Logs(QPlainTextEdit):
             lambda: self.show() if self.isHidden() else self.hide()
         )
 
-        # sys.stdout = sys.stderr = Stdout(self)
-        # sys.excepthook = self.excepthook
+        sys.stdout = sys.stderr = Stdout(self)
+        sys.excepthook = self.excepthook
 
         self.setWindowTitle("Log")
         self.resize(700, 350)

@@ -18,3 +18,7 @@ class Cog(commands.Cog, QObject, metaclass=CogMeta):
     def __init__(self, client: Client) -> None:
         super().__init__()
         self.client = client
+
+    @property
+    def window(self):
+        return self.client.window
