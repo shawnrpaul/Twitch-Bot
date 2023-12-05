@@ -61,15 +61,17 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent):
         if self.systemTray.isVisible():
             self.hide()
-            self.logs.hide() if not self.logs.isHidden() else ...
+            self.logs.close() if not self.logs.isHidden() else ...
+            self.client.run_event("window_close")
             return event.ignore()
         return super().closeEvent(event)
 
     def close(self) -> None:
-        self.hide()
+        self.logs.close()
         self.client.loop.create_task(self.client.close()).add_done_callback(
             lambda _: self.client.loop.stop()
         )
+        return super().close()
 
     def showMessage(self, message: str, time=3000):
         self.systemTray.showMessage(message, time)

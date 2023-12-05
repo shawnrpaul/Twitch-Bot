@@ -34,12 +34,13 @@ class Client(commands.Bot):
         with open("data/settings.json") as f:
             return json.load(f)
 
-    def create_task(self, coro: Coroutine) -> None:
+    def create_task(self, coro: Coroutine) -> asyncio.Task:
         if not inspect.iscoroutine(coro):
             raise TypeError("The function must be a coroutine")
         task = self.loop.create_task(coro)
         task.add_done_callback(self._tasks.remove)
         self._tasks.append(task)
+        return task
 
     def add_cogs(self) -> None:
         for path in os.listdir("cogs"):
@@ -103,11 +104,16 @@ class Client(commands.Bot):
         return await super().event_command_error(ctx.command, error)
 
     async def event_message(self, message: Message) -> None:
+        if message.echo:
+            message._author = self.streamer.channel.get_chatter(self.streamer.name)
         self._messages[message.id] = message
         return await super().event_message(message)
 
     async def event_channel_joined(self, channel: Channel):
+        self.channel = channel
         self.streamer = await channel.user()
+        chatter = channel.get_chatter(self.streamer.name)
+        chatter._id = str(self.streamer.id)
 
         # fmt: off
         tasks = {
@@ -148,7 +154,7 @@ class Client(commands.Bot):
 
     async def close(self) -> None:
         await self.streamer.channel.send("Srpbotz has left the chat")
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
         self.process_events.stop()
         self.run_event("close")
         return await super().close()
