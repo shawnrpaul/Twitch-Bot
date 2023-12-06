@@ -14,8 +14,6 @@ from .logs import Logs
 
 if TYPE_CHECKING:
     from twitch_bot import Client
-    from .sidebar import Sidebar
-    from .stack import Stack
 
 
 class MainWindow(QMainWindow):
