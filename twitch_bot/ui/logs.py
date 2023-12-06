@@ -1,10 +1,9 @@
 from __future__ import annotations
 from typing import Optional, Type, TYPE_CHECKING
 from pathlib import Path
-import logging
 import traceback
+import logging
 import sys
-import os
 
 from PyQt6.QtWidgets import QPlainTextEdit
 
@@ -12,11 +11,11 @@ if TYPE_CHECKING:
     from .window import MainWindow
     from types import TracebackType
 
-logging.basicConfig(
-    filename="twitch-bot.log",
-    format="%(levelname)s:%(asctime)s: %(message)s",
-    level=logging.ERROR,
-)
+logger = logging.getLogger("twitch-bot")
+formatter = logging.Formatter("%(levelname)s:%(asctime)s: %(message)s")
+file_handler = logging.FileHandler("twitch-bot.log")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 
 class Stdout:
@@ -40,6 +39,7 @@ class Logs(QPlainTextEdit):
         action.triggered.connect(
             lambda: self.show() if self.isHidden() else self.hide()
         )
+        self.scrollbar = self.verticalScrollBar()
 
         sys.stdout = sys.stderr = Stdout(self)
         sys.excepthook = self.excepthook
@@ -54,9 +54,13 @@ class Logs(QPlainTextEdit):
     def window(self) -> MainWindow:
         return self._window
 
+    def setPlainText(self, text: str | None) -> None:
+        super().setPlainText(text)
+        self.scrollbar.setValue(self.scrollbar.maximum())
+
     def log(self, text: str, level=logging.ERROR):
         print(text)
-        logging.log(msg=text, level=level)
+        logger.log(msg=text, level=level)
 
     def excepthook(
         self,
@@ -64,16 +68,12 @@ class Logs(QPlainTextEdit):
         exc_value: Optional[BaseException],
         exc_tb: TracebackType,
     ):
-        tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
-        cwd = Path(os.path.dirname(os.path.dirname(__file__))).absolute()
         try:
-            for frame in tb.stack[::-1]:
-                file = Path(frame.filename).absolute()
-                if file.is_relative_to(cwd):
-                    line = frame.lineno
-                    break
-            self.log(f"{file.name}({line}) - {exc_type.__name__}: {exc_value}")
+            file = Path(exc_tb.tb_frame.f_code.co_filename)
+            line = exc_tb.tb_lineno
+            logger.error(f"{file.name}({line}) - {exc_type.__name__}: {exc_value}")
+            if not file.is_relative_to(Path("_internal/cogs")) or not file.is_relative_to(Path("_internal/site-packages")):  # fmt:skip
+                return sys.exit(1)
         except Exception:
-            self.log(f"{exc_type.__name__}: {exc_value}")
-        self.window.close()
-        return sys.__excepthook__(exc_type, exc_value, exc_tb)
+            logger.error(f"{exc_type.__name__}: {exc_value}")
+        traceback.print_exception(exc_type, exc_value, exc_tb)

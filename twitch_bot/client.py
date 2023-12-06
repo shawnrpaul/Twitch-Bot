@@ -105,8 +105,6 @@ class Client(commands.Bot):
     async def event_channel_joined(self, channel: Channel):
         self.streamer = await channel.user()
         self.channel = channel
-        chatter = channel.get_chatter(self.streamer.name)
-        chatter._id = str(self.streamer.id)
 
         # fmt: off
         tasks = {
@@ -162,7 +160,39 @@ class Client(commands.Bot):
 
     async def close(self) -> None:
         await self.channel.send("Srpbotz has left the chat")
-        await asyncio.sleep(0.5)
-        self.process_events.stop()
         self.run_event("close")
+        self.process_events.stop()
+        await asyncio.sleep(0.5)
         return await super().close()
+
+    @commands.command()
+    async def cmds(self, ctx: commands.Context, name: str):
+        if not (cog := self.cogs.get(name)):
+            return await ctx.reply(f"Cog {name} couldn't be found")
+
+        cmds = []
+        commands = list(cog._commands.values())
+        if not commands:
+            return await ctx.send(f"Cog {name} doesn't have any commands")
+
+        for command in commands:
+            cmd = f"*{command.name}"
+            params = list(command.params.values())
+            if len(params) > 2:
+                for param in params[2:]:
+                    if param.default == param.empty:
+                        cmd += f" <{param.name}>"
+                    else:
+                        cmd += f"({param.name})"
+            cmds.append(cmd)
+
+        msg = f"{', '.join(cmds)}. <> = required, () = optional"
+        await ctx.send(msg)
+
+    @cmds.error
+    async def cmds_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.MissingRequiredArgument):
+            cogs = [cog.name for cog in self.cogs.values() if cog.commands.values()]
+            return await ctx.reply(
+                f"Format: `*cmds <cog>`. Available cogs: {', '.join(cogs)}. Note: Case Sensitive"
+            )
