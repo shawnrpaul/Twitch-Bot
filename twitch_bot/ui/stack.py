@@ -1,10 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-import importlib
-import traceback
-import copy
-import sys
-import os
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -57,25 +52,19 @@ class CogLabel(QLabel):
         return self._window
 
 
-class CogsPage(QScrollArea):
+class CogsPage(QFrame):
     def __init__(self, window: MainWindow) -> None:
         super().__init__(window)
         self._window = window
-        self.setObjectName("Cogs")
-        self.page = QFrame(self)
-        self.page.setFrameShape(QFrame.Shape.StyledPanel)
-        self.page.setFrameShadow(QFrame.Shadow.Plain)
-        self.page.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        self.page.setContentsMargins(0, 6, 0, 6)
-        self._layout = QVBoxLayout(self.page)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setFrameShadow(QFrame.Shadow.Plain)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setContentsMargins(0, 6, 0, 6)
+        self.setMinimumWidth(500)
+
+        self._layout = QVBoxLayout()
         self._layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.page.setLayout(self._layout)
-        self.page.setMinimumWidth(500)
-        self.setWidgetResizable(True)
-        self.setWidget(self.page)
-        self.page.setParent(self)
+        self.setLayout(self._layout)
 
     @property
     def window(self) -> MainWindow:
@@ -97,7 +86,11 @@ class Stack(QStackedWidget):
         super().__init__(window)
         self._window = window
         self.cogsPage = CogsPage(self.window)
-        self.addWidget(self.cogsPage)
+        scroll = QScrollArea()
+        scroll.setObjectName("Cogs")
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(self.cogsPage)
+        self.addWidget(scroll)
 
     @property
     def window(self) -> MainWindow:

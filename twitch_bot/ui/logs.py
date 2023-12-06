@@ -12,6 +12,12 @@ if TYPE_CHECKING:
     from .window import MainWindow
     from types import TracebackType
 
+logging.basicConfig(
+    filename="twitch-bot.log",
+    format="%(levelname)s:%(asctime)s: %(message)s",
+    level=logging.ERROR,
+)
+
 
 class Stdout:
     def __init__(self, logs: Logs) -> None:
@@ -66,8 +72,8 @@ class Logs(QPlainTextEdit):
                 if file.is_relative_to(cwd):
                     line = frame.lineno
                     break
-            logging.error(f"{file.name}({line}) - {exc_type.__name__}: {exc_value}")
+            self.log(f"{file.name}({line}) - {exc_type.__name__}: {exc_value}")
         except Exception:
-            logging.error(f"{exc_type.__name__}: {exc_value}")
+            self.log(f"{exc_type.__name__}: {exc_value}")
         self.window.close()
         return sys.__excepthook__(exc_type, exc_value, exc_tb)

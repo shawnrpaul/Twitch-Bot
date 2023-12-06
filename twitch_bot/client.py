@@ -87,8 +87,6 @@ class Client(commands.Bot):
     async def event_ready(self):
         print(f"Logged in as {self.nick}")
         await self.join_channels([self.nick])
-        self.process_events.start()
-        self.window.systemTray.show()
         self.add_cogs()
         self.window.showMaximized()
 
@@ -152,6 +150,8 @@ class Client(commands.Bot):
         self.application.processEvents()
 
     def run(self) -> None:
+        self.window.systemTray.show()
+        self.process_events.start()
         return super().run()
 
     async def close(self) -> None:
