@@ -22,3 +22,6 @@ class Cog(commands.Cog, QObject, metaclass=CogMeta):
     @property
     def window(self):
         return self.client.window
+
+    def unload(self) -> None:
+        ...

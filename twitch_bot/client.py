@@ -73,9 +73,9 @@ class Client(commands.Bot):
         tasks = self.routines.pop(cog.name, ())
         for task in tasks:
             task.stop()
-        self._cogs.pop(cog.name)
-        cog._unload_methods(self)
+        cog.unload()
         self.window.stack.removeCog(cog)
+        return super().remove_cog(cog.name)
 
     async def event_raw_data(self, data: str):
         match = re.match(r"[\S\s]+target-msg-id=([\S\s]+);[\S\s]+CLEARMSG[\S\s]+", data)

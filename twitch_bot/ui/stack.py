@@ -74,7 +74,7 @@ class CogsPage(QFrame):
         self._layout.addWidget(CogLabel(self.window, cog))
 
     def removeCog(self, cog: commands.Cog) -> None:
-        for index in self._layout.count():
+        for index in range(self._layout.count()):
             label: CogLabel = self._layout.itemAt(index).widget()
             if label.cog == cog:
                 self._layout.removeWidget(label)
