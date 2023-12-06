@@ -20,14 +20,14 @@ sys.path.append(os.path.join(sys.path[0], "site-packages"))
 class Client(commands.Bot):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._es = eventsub.EventSubWSClient(self)
         self._token: str = kwargs.get("token") or args[0]
+        self._es = eventsub.EventSubWSClient(self)
         self._messages: dict[str, Message] = {}
         self.routines: dict[str, tuple[routines.Routine]] = {}
         self.application = QApplication([])
         self.window = MainWindow(self)
         self.streamer = None
-        self._tasks: list[asyncio.Task] = []
+        self._tasks: set[asyncio.Task] = set()
 
     @staticmethod
     def load_settings() -> None:
@@ -38,8 +38,8 @@ class Client(commands.Bot):
         if not inspect.iscoroutine(coro):
             raise TypeError("The function must be a coroutine")
         task = self.loop.create_task(coro)
-        task.add_done_callback(self._tasks.remove)
-        self._tasks.append(task)
+        task.add_done_callback(self._tasks.discard)
+        self._tasks.add(task)
         return task
 
     def add_cogs(self) -> None:
@@ -80,7 +80,9 @@ class Client(commands.Bot):
     async def event_raw_data(self, data: str):
         match = re.match(r"[\S\s]+target-msg-id=([\S\s]+);[\S\s]+CLEARMSG[\S\s]+", data)
         if match and (message := self._messages.pop(match.groups()[0], None)):
-            self.run_event("message_delete", message)
+            return self.run_event("message_delete", message)
+        if "CLEARCHAT" in data:
+            return self.run_event("message_clear")
 
     async def event_ready(self):
         print(f"Logged in as {self.nick}")
@@ -90,28 +92,15 @@ class Client(commands.Bot):
         self.add_cogs()
         self.window.showMaximized()
 
-    async def event_error(self, error: Exception, data: str = None):
-        return await super().event_error(error, data)
-
-    async def event_command_error(
-        self, ctx: commands.Context, error: Exception
-    ) -> None:
-        command = ctx.command
-        if isinstance(error, commands.errors.CommandNotFound):
-            return
-        if isinstance(command, commands.Command) and command.has_error_handler():
-            return
-        return await super().event_command_error(ctx.command, error)
-
     async def event_message(self, message: Message) -> None:
         if message.echo:
-            message._author = self.streamer.channel.get_chatter(self.streamer.name)
+            message._author = self.channel.get_chatter(self.streamer.name)
         self._messages[message.id] = message
         return await super().event_message(message)
 
     async def event_channel_joined(self, channel: Channel):
-        self.channel = channel
         self.streamer = await channel.user()
+        self.channel = channel
         chatter = channel.get_chatter(self.streamer.name)
         chatter._id = str(self.streamer.id)
 
@@ -145,6 +134,19 @@ class Client(commands.Bot):
             for task in tasks:
                 tg.create_task(task)
 
+    async def event_error(self, error: Exception, data: str = None):
+        return await super().event_error(error, data)
+
+    async def event_command_error(
+        self, ctx: commands.Context, error: Exception
+    ) -> None:
+        command = ctx.command
+        if isinstance(error, commands.errors.CommandNotFound):
+            return
+        if isinstance(command, commands.Command) and command.has_error_handler():
+            return
+        return await super().event_command_error(ctx.command, error)
+
     @routines.routine(seconds=1e-4)
     async def process_events(self) -> None:
         self.application.processEvents()
@@ -153,7 +155,7 @@ class Client(commands.Bot):
         return super().run()
 
     async def close(self) -> None:
-        await self.streamer.channel.send("Srpbotz has left the chat")
+        await self.channel.send("Srpbotz has left the chat")
         await asyncio.sleep(0.5)
         self.process_events.stop()
         self.run_event("close")
