@@ -320,6 +320,37 @@ PyQt6-Qt6 = ">=6.5.0"
 PyQt6-sip = ">=13.4,<14"
 
 [[package]]
+name = "pyqt6-charts"
+version = "6.6.0"
+description = "Python bindings for the Qt Charts library"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "PyQt6_Charts-6.6.0-cp37-abi3-macosx_10_14_universal2.whl", hash = "sha256:d73a636cdc1baf998de9000382bab33d550c59a1dc28c19ab7d19331ba179b17"},
+    {file = "PyQt6_Charts-6.6.0-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:140709b228fcb50d06c8323bd36e817bcceda5e02632a4e81874e001564400ab"},
+    {file = "PyQt6_Charts-6.6.0-cp37-abi3-win_amd64.whl", hash = "sha256:053954657c5811aa7c22ffcaaf8423ac20ffdae15f67361daf95b734f3e2fe74"},
+    {file = "PyQt6_Charts-6.6.0.tar.gz", hash = "sha256:14cc6e5d19cae80129524a42fa6332d0d5dada4282a9423425e6b9ae1b6bc56d"},
+]
+
+[package.dependencies]
+PyQt6 = ">=6.2.0"
+PyQt6-Charts-Qt6 = ">=6.6.0"
+PyQt6-sip = ">=13.4,<14"
+
+[[package]]
+name = "pyqt6-charts-qt6"
+version = "6.6.1"
+description = "The subset of a Qt installation needed by PyQt6-Charts."
+optional = false
+python-versions = "*"
+files = [
+    {file = "PyQt6_Charts_Qt6-6.6.1-py3-none-macosx_10_14_x86_64.whl", hash = "sha256:aeeac0c4887687e1c6ced0b7ba7c2ffe7334562770d0994b785584409c4b5572"},
+    {file = "PyQt6_Charts_Qt6-6.6.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:3e22fd399de20ba88f4d166270a725a36e7e5ed6b0f9df9da7224d18b19c099f"},
+    {file = "PyQt6_Charts_Qt6-6.6.1-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:cf2531904c7fcf1e68146df17fc73f0fe2f5f8786e3b055b08e431bf84aebc81"},
+    {file = "PyQt6_Charts_Qt6-6.6.1-py3-none-win_amd64.whl", hash = "sha256:0f4f92a8c704d5bd2cb6d95e220a112844ef62ba011321e9924b4370d5ec61fe"},
+]
+
+[[package]]
 name = "pyqt6-qscintilla"
 version = "2.14.1"
 description = "Python bindings for the QScintilla programmers editor widget"
@@ -495,4 +526,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4e8c0957ecbba7c96e31ae097183b67b58937576d3245e3a75e9547630fa5174"
+content-hash = "cafa66c8ec90726edf1468f20fa3b226cf3beb6ebb9e836ce85d9a16150bbbb3"

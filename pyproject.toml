@@ -10,6 +10,7 @@ python = "^3.11"
 PyQt6 = "^6.5.2"
 pyqt6-qscintilla = "^2.14.1"
 twitchio = "^2.8.2"
+pyqt6-charts = "^6.6.0"
 
 
 [build-system]

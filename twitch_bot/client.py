@@ -73,7 +73,10 @@ class Client(commands.Bot):
         tasks = self.routines.pop(cog.name, ())
         for task in tasks:
             task.stop()
-        cog.unload()
+        try:
+            cog.unload()
+        except Exception as e:
+            traceback.print_exception(type(e), e, e.__traceback__)
         self.window.stack.removeCog(cog)
         return super().remove_cog(cog.name)
 
