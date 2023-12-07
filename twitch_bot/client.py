@@ -14,9 +14,7 @@ from twitch_bot.ext import commands, eventsub, routines
 
 __all__ = ("Client",)
 
-# Use when using python instead of exe
-sys.path.append(os.path.join(sys.path[0], "_internal"))
-sys.path.append(os.path.join(sys.path[0], "_internal", "site-packages"))
+sys.path.append(os.path.join(sys.path[0], "site-packages"))
 
 
 class Client(commands.Bot):
@@ -45,13 +43,12 @@ class Client(commands.Bot):
         return task
 
     def add_cogs(self) -> None:
-        cogs = "_internal/cogs"
-        for path in os.listdir(cogs):
-            if os.path.isfile(f"{cogs}/{path}"):
+        for path in os.listdir("cogs"):
+            if os.path.isfile(f"cogs/{path}"):
                 if not path.endswith(".py"):
                     continue
             else:
-                if "__init__.py" not in os.listdir(f"{cogs}/{path}"):
+                if "__init__.py" not in os.listdir(f"cogs/{path}"):
                     continue
             path = path.replace(".py", "")
             try:
