@@ -2,11 +2,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import logging
 
-from PyQt6.QtCore import QFileSystemWatcher
-from PyQt6.QtGui import QIcon, QCloseEvent
-from PyQt6.QtWidgets import QMainWindow
+from twitch_bot.QtCore import QFileSystemWatcher
+from twitch_bot.QtGui import QCloseEvent
+from twitch_bot.QtWidgets import QMainWindow
 
 from .body import Body
+from .menubar import Menubar
 from .sidebar import Sidebar
 from .stack import Stack
 from .systemtray import SystemTray
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow):
         self.client = client
 
         self.body = Body(self)
+        self.menubar = Menubar(self)
         self.systemTray = SystemTray(self)
         self.sidebar = Sidebar(self)
         self.stack = Stack(self)
@@ -32,29 +34,32 @@ class MainWindow(QMainWindow):
         action.triggered.connect(
             lambda: self.logs.show() if self.logs.isHidden() else self.logs.hide()
         )
+        action = self.addAction("Menubar")
+        action.setShortcut("Alt+M")
+        action.triggered.connect(
+            lambda: self.menubar.show()
+            if self.menubar.isHidden()
+            else self.menubar.hide()
+        )
 
         styles_path = "data/styles.qss"
-        self.client.application.setStyleSheet(open(styles_path).read())
+        self.application.setStyleSheet(open(styles_path).read())
         self._styles = QFileSystemWatcher()
         self._styles.addPath(styles_path)
         self._styles.fileChanged.connect(
-            lambda path: self.client.application.setStyleSheet(open(path).read())
+            lambda path: self.application.setStyleSheet(open(path).read())
         )
 
+        self.setMenuBar(self.menubar)
         self.body.addWidget(self.sidebar, 3)
         self.body.addWidget(self.stack, 10)
         self.setCentralWidget(self.body)
 
         self.setWindowTitle("Twitch Bot")
-        self.setWindowIcon(QIcon("icons/twitch.ico"))
 
-    def setWindowIcon(self, icon: QIcon) -> None:
-        self.logs.setWindowIcon(icon)
-        return super().setWindowIcon(icon)
-
-    def setStyleSheet(self, styleSheet: str | None) -> None:
-        self.logs.setStyleSheet(styleSheet)
-        return super().setStyleSheet(styleSheet)
+    @property
+    def application(self):
+        return self.client.application
 
     def closeEvent(self, event: QCloseEvent):
         if self.systemTray.isVisible():
