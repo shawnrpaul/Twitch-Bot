@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QMenu, QSystemTrayIcon
+from twitch_bot.QtGui import QIcon
+from twitch_bot.QtWidgets import QMenu, QSystemTrayIcon
 
 if TYPE_CHECKING:
     from .window import MainWindow

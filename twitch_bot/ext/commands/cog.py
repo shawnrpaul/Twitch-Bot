@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import QObject
+from twitch_bot.QtCore import QObject
 from twitchio.ext import commands
 
 if TYPE_CHECKING:

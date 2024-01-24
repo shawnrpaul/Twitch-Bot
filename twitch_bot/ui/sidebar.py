@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt, QEvent
-from PyQt6.QtGui import QEnterEvent, QMouseEvent
-from PyQt6.QtWidgets import QFrame, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from twitch_bot.QtCore import Qt, QEvent
+from twitch_bot.QtGui import QEnterEvent, QMouseEvent
+from twitch_bot.QtWidgets import QFrame, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 if TYPE_CHECKING:
     from .window import MainWindow

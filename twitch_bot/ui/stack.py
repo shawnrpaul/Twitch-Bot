@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
+from twitch_bot.QtCore import Qt
+from twitch_bot.QtWidgets import (
     QFrame,
     QLabel,
     QPushButton,
@@ -15,8 +15,8 @@ from PyQt6.QtWidgets import (
 
 
 if TYPE_CHECKING:
-    from PyQt6.QtWidgets import QWidget
     from .window import MainWindow
+    from twitch_bot import Client
     from twitchio.ext import commands
 
 __all__ = ("Stack",)
@@ -26,9 +26,8 @@ class CogLabel(QLabel):
     def __init__(self, window: MainWindow, cog: commands.Cog):
         super().__init__(window)
         self._window = window
-        self.client = window.client
         self.cog = cog
-        self.setText(cog.name.capitalize())
+        self.setText(cog.name)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumSize(50, 150)
         self.setMaximumHeight(150)
@@ -50,6 +49,10 @@ class CogLabel(QLabel):
     @property
     def window(self) -> MainWindow:
         return self._window
+
+    @property
+    def client(self) -> Client:
+        return self.window.client
 
 
 class CogsPage(QFrame):
@@ -109,7 +112,3 @@ class Stack(QStackedWidget):
     def removeWidget(self, w: QWidget | None) -> None:
         self.window.sidebar.removeLabel(w)
         return super().removeWidget(w)
-
-    @property
-    def window(self) -> MainWindow:
-        return self._window

@@ -5,7 +5,7 @@ import traceback
 import logging
 import sys
 
-from PyQt6.QtWidgets import QPlainTextEdit
+from twitch_bot.QtWidgets import QPlainTextEdit
 
 if TYPE_CHECKING:
     from .window import MainWindow
@@ -39,7 +39,6 @@ class Logs(QPlainTextEdit):
         action.triggered.connect(
             lambda: self.show() if self.isHidden() else self.hide()
         )
-        self.scrollbar = self.verticalScrollBar()
 
         sys.stdout = sys.stderr = Stdout(self)
         sys.excepthook = self.excepthook
@@ -55,8 +54,11 @@ class Logs(QPlainTextEdit):
         return self._window
 
     def setPlainText(self, text: str | None) -> None:
+        scrollbar = self.verticalScrollBar()
+        value = scrollbar.value()
+        max = scrollbar.maximum()
         super().setPlainText(text)
-        self.scrollbar.setValue(self.scrollbar.maximum())
+        scrollbar.setValue(scrollbar.maximum()) if value == max else ...
 
     def log(self, text: str, level=logging.ERROR):
         print(text)
@@ -72,7 +74,7 @@ class Logs(QPlainTextEdit):
             file = Path(exc_tb.tb_frame.f_code.co_filename)
             line = exc_tb.tb_lineno
             logger.error(f"{file.name}({line}) - {exc_type.__name__}: {exc_value}")
-            if not file.is_relative_to(Path("_internal/cogs")) or not file.is_relative_to(Path("_internal/site-packages")):  # fmt:skip
+            if not file.is_relative_to(Path("cogs").absolute()) and not file.is_relative_to(Path("site-packages").absolute()):  # fmt:skip
                 return sys.exit(1)
         except Exception:
             logger.error(f"{exc_type.__name__}: {exc_value}")
