@@ -8,8 +8,9 @@ import sys
 import os
 import re
 
-from PyQt6.QtWidgets import QApplication
 from twitch_bot import MainWindow, Message, Channel
+from twitch_bot.QtGui import QIcon
+from twitch_bot.QtWidgets import QApplication
 from twitch_bot.ext import commands, eventsub, routines
 
 __all__ = ("Client",)
@@ -25,6 +26,7 @@ class Client(commands.Bot):
         self._messages: dict[str, Message] = {}
         self.routines: dict[str, tuple[routines.Routine]] = {}
         self.application = QApplication([])
+        self.application.setWindowIcon(QIcon("icons/twitch.ico"))
         self.window = MainWindow(self)
         self.streamer = None
         self._tasks: set[asyncio.Task] = set()
@@ -59,6 +61,8 @@ class Client(commands.Bot):
                 traceback.print_exception(type(e), e, e.__traceback__)
 
     def add_cog(self, cog: commands.Cog) -> None:
+        if not isinstance(cog, commands.Cog):
+            raise TypeError("Cog must be of type twitchio.ext.commands.Cog")
         super().add_cog(cog)
         task_list = tuple(
             getattr(cog, attr)
