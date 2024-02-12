@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from twitch_bot.QtGui import QAction
 from twitch_bot.QtWidgets import QMenuBar, QMenu
 
 if TYPE_CHECKING:
@@ -27,6 +28,11 @@ class Menubar(QMenuBar):
         for action in menu.actions():
             self.removeAction(action)
         self._menus.discard(menu)
+
+    def removeAction(self, action: QAction) -> None:
+        if self.isHidden():
+            self.window.removeAction(action)
+        return super().removeAction(action)
 
     def show(self) -> None:
         super().show()

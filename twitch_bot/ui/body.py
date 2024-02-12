@@ -18,14 +18,14 @@ class Body(QFrame):
         self.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        self._layout = QHBoxLayout(self)
-        self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.setSpacing(0)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        self.setLayout(self._layout)
+        self.setLayout(layout)
 
     def addWidget(self, widget: QWidget, stretch: int):
-        self._layout.addWidget(widget, stretch)
+        self.layout().addWidget(widget, stretch)
 
     @property
     def window(self) -> MainWindow:

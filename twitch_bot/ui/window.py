@@ -37,9 +37,9 @@ class MainWindow(QMainWindow):
         action = self.addAction("Menubar")
         action.setShortcut("Alt+M")
         action.triggered.connect(
-            lambda: self.menubar.show()
-            if self.menubar.isHidden()
-            else self.menubar.hide()
+            lambda: (
+                self.menubar.show() if self.menubar.isHidden() else self.menubar.hide()
+            )
         )
 
         styles_path = "data/styles.qss"

@@ -10,16 +10,19 @@ if TYPE_CHECKING:
 
 
 class SidebarLabel(QLabel):
-    def __init__(self, window: MainWindow, widget: QWidget | None = None):
-        super().__init__()
-        self._window = window
+    def __init__(self, sidebar: Sidebar, widget: QWidget | None = None):
+        super().__init__(sidebar)
         self.setWidget(widget)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
 
     @property
+    def sidebar(self) -> Sidebar:
+        return self.parent()
+
+    @property
     def window(self) -> MainWindow:
-        return self._window
+        return self.sidebar.window
 
     def setWidget(self, widget: QWidget | None = None):
         self._widget = widget
@@ -29,13 +32,13 @@ class SidebarLabel(QLabel):
         if not self._widget:
             return
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        event.accept()
+        return event.accept()
 
     def leaveEvent(self, a0: QEvent | None) -> None:
         if not self._widget:
             return
         self.setCursor(Qt.CursorShape.ArrowCursor)
-        a0.accept()
+        return a0.accept()
 
     def mousePressEvent(self, ev: QMouseEvent | None) -> None:
         if not self._widget:
@@ -54,22 +57,27 @@ class Sidebar(QFrame):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumWidth(1)
 
-        self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(5, 10, 5, 0)
-        self._layout.setSpacing(0)
-        self._layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.setLayout(self._layout)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 10, 5, 0)
+        layout.setSpacing(0)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setLayout(layout)
+
+    @property
+    def window(self) -> MainWindow:
+        return self._window
 
     def createLabel(self, widget: QWidget | None = None) -> SidebarLabel:
-        label = SidebarLabel(self.window, widget=widget)
-        self._layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignTop)
+        label = SidebarLabel(self, widget=widget)
+        self.layout().addWidget(label, alignment=Qt.AlignmentFlag.AlignTop)
         return label
 
     def removeLabel(self, widget: QWidget) -> bool:
-        for i in range(self._layout.count()):
-            label: SidebarLabel = self.layout.itemAt(i).widget()
+        layout = self.layout()
+        for i in range(layout.count()):
+            label: SidebarLabel = layout.itemAt(i).widget()
             if label._widget == widget:
-                self._layout.removeWidget(label)
+                layout.removeWidget(label)
                 label.deleteLater()
                 return True
 
@@ -77,11 +85,3 @@ class Sidebar(QFrame):
         self.window.showMessage(message)
         self.window.log(message)
         return False
-
-    @property
-    def window(self) -> MainWindow:
-        return self._window
-
-    @property
-    def layout(self) -> QVBoxLayout:
-        return self._layout

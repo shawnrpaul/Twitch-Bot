@@ -12,13 +12,14 @@ from twitch_bot import MainWindow, Message, Channel
 from twitch_bot.QtGui import QIcon
 from twitch_bot.QtWidgets import QApplication
 from twitch_bot.ext import commands, eventsub, routines
+from twitchio.ext.commands import Bot
 
 __all__ = ("Client",)
 
 sys.path.append(os.path.join(sys.path[0], "site-packages"))
 
 
-class Client(commands.Bot):
+class Client(Bot):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._token: str = kwargs.get("token") or args[0]
@@ -47,12 +48,9 @@ class Client(commands.Bot):
     def add_cogs(self) -> None:
         for path in os.listdir("cogs"):
             if os.path.isfile(f"cogs/{path}"):
-                if not path.endswith(".py"):
-                    continue
-            else:
-                if "__init__.py" not in os.listdir(f"cogs/{path}"):
-                    continue
-            path = path.replace(".py", "")
+                continue
+            if "settings.json" not in os.listdir(f"cogs/{path}"):
+                continue
             try:
                 mod = importlib.import_module(f"cogs.{path}")
                 mod.setup(self.window.client)
@@ -77,12 +75,14 @@ class Client(commands.Bot):
         tasks = self.routines.pop(cog.name, ())
         for task in tasks:
             task.stop()
-        try:
-            cog.unload()
-        except Exception as e:
-            traceback.print_exception(type(e), e, e.__traceback__)
+
         self.window.stack.removeCog(cog)
         return super().remove_cog(cog.name)
+
+    def remove_event(self, callback) -> bool:
+        if ret := super().remove_event(callback):
+            self.registered_callbacks.pop(callback, None)
+        return ret
 
     async def event_raw_data(self, data: str):
         match = re.match(r"[\S\s]+target-msg-id=([\S\s]+);[\S\s]+CLEARMSG[\S\s]+", data)
